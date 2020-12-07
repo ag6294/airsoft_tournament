@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1079242689300",
+    "firebase_url": "https://airsoft-tournament.firebaseio.com",
+    "project_id": "airsoft-tournament",
+    "storage_bucket": "airsoft-tournament.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079242689300:android:4eb7358a7887e636bc1001",
+        "android_client_info": {
+          "package_name": "it.guardianidelpo.airsoft_tournament"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1079242689300-k8t3uk1g09ppejjm994p3p2nkuaqibrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxgYthwGCq4O6Mgacpd3HaqNdaAbBFd-I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1079242689300-k8t3uk1g09ppejjm994p3p2nkuaqibrn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
