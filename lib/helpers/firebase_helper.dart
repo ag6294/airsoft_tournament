@@ -115,10 +115,12 @@ class FirebaseHelper {
       final response = await http.get(url);
       Map<String, dynamic> decodedResponse = json.decode(response.body);
 
-      return decodedResponse
-          .map((key, value) => MapEntry(key, Team.fromMap(key, value)))
-          .values
-          .toList();
+      return decodedResponse != null
+          ? decodedResponse
+              .map((key, value) => MapEntry(key, Team.fromMap(key, value)))
+              .values
+              .toList()
+          : [];
     } catch (e) {
       print(e);
       throw e;

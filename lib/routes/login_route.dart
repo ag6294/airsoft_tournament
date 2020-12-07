@@ -2,7 +2,6 @@ import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/widgets/forms/form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../helpers/form_helper.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class LoginRoute extends StatelessWidget {
