@@ -8,6 +8,7 @@ class Game {
   final DateTime date;
   final String lastModifiedBy;
   final DateTime lastModifiedOn;
+  final String imageUrl;
 
   Game(
       {this.id,
@@ -16,7 +17,8 @@ class Game {
       this.place,
       this.date,
       this.lastModifiedBy,
-      this.lastModifiedOn});
+      this.lastModifiedOn,
+      this.imageUrl});
 
   Game.fromMap(String id, Map map)
       : this.id = map['id'],
@@ -25,7 +27,8 @@ class Game {
         this.place = map['place'],
         this.date = map['date'],
         this.lastModifiedBy = map['lastModifiedBy'],
-        this.lastModifiedOn = map['lastModifiedOn'];
+        this.lastModifiedOn = map['lastModifiedOn'],
+        this.imageUrl = map['imageUrl'];
 
   Map<String, dynamic> get asMap {
     return {
@@ -33,9 +36,10 @@ class Game {
       'title': title,
       'description': description,
       'place': place,
-      'date': date,
+      'date': date.toIso8601String(),
       'lastModifiedBy': lastModifiedBy,
-      'lastModifiedOn': lastModifiedOn,
+      'lastModifiedOn': lastModifiedOn.toIso8601String(),
+      'imageUrl': imageUrl,
     };
   }
 }

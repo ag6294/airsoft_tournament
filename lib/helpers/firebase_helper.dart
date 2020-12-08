@@ -1,10 +1,17 @@
+import 'dart:io';
+import 'package:path/path.dart' as ph;
+
+import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
+final FirebaseStorage _store = FirebaseStorage.instance;
 
 const endPoint = 'https://airsoft-tournament.firebaseio.com/';
 
@@ -140,5 +147,48 @@ class FirebaseHelper {
       print(e);
       throw e;
     }
+  }
+
+  static Future<Game> addGame(Game game) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/games.json?auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/addGame] POST to /games, body = title : ${game.title}');
+
+    var response = await http.post(url, body: json.encode(game.asMap));
+    print(response.body);
+
+    final String gameId = json.decode(response.body)['name'];
+
+    final imageFile = File(game.imageUrl);
+    final ref = _store
+        .ref()
+        .child('game_images')
+        .child(gameId + ph.extension(imageFile.path));
+
+    await ref.putFile(imageFile);
+
+    final imageUrl = await ref.getDownloadURL();
+
+    final uploadedGame = Game(
+      id: gameId,
+      imageUrl: imageUrl,
+      date: game.date,
+      description: game.description,
+      lastModifiedBy: game.lastModifiedBy,
+      lastModifiedOn: game.lastModifiedOn,
+      place: game.place,
+      title: game.title,
+    );
+
+    url = endPoint + '/games/$gameId.json?auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/addGame] PATCH to /games, body = title : ${uploadedGame.title}');
+    response = await http.patch(url, body: json.encode(uploadedGame.asMap));
+    print(response.body);
+
+    return uploadedGame;
   }
 }

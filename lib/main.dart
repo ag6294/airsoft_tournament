@@ -4,6 +4,7 @@ import 'package:airsoft_tournament/routes/home_route.dart';
 import 'package:airsoft_tournament/routes/login_route.dart';
 import 'package:airsoft_tournament/routes/team_login_route.dart';
 import 'package:airsoft_tournament/routes/games_route.dart';
+import 'package:airsoft_tournament/routes/edit_game_route.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
             HomeRoute.routeName: (context) => HomeRoute(),
             TeamLoginRoute.routeName: (context) => TeamLoginRoute(),
             GamesRoute.routeName: (context) => GamesRoute(),
+            EditGameRoute.routeName: (context) => EditGameRoute(),
           },
         ),
       ),
