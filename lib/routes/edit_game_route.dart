@@ -64,11 +64,12 @@ class _EditGameRouteState extends State<EditGameRoute> {
       });
 
       try {
-        Provider.of<GamesProvider>(context, listen: false).addNewGame(
+        final _loggedPlayer =
+            Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
+        await Provider.of<GamesProvider>(context, listen: false).addNewGame(
           Game(
-            lastModifiedBy: Provider.of<LoginProvider>(context, listen: false)
-                .loggedPlayer
-                .id,
+            lastModifiedBy: _loggedPlayer.id,
+            hostTeamId: _loggedPlayer.teamId,
             lastModifiedOn: DateTime.now(),
             place: editedGame.place,
             title: editedGame.title,
@@ -108,138 +109,153 @@ class _EditGameRouteState extends State<EditGameRoute> {
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            child: ListView(
-              // reverse: true,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Titolo'),
-                  textInputAction: TextInputAction.next,
-                  autofocus: true,
-                  onFieldSubmitted: (_) =>
-                      FocusScope.of(context).requestFocus(_descriptionFN),
-                  onSaved: (value) {
-                    editedGame = Game(
-                      place: editedGame.place,
-                      lastModifiedOn: editedGame.lastModifiedOn,
-                      lastModifiedBy: editedGame.lastModifiedBy,
-                      description: editedGame.description,
-                      date: editedGame.date,
-                      id: editedGame.id,
-                      title: value,
-                      imageUrl: editedGame.imageUrl,
-                    );
-                  },
-                  validator: (value) => _validateText(value),
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Descrizione'),
-                  maxLines: 3,
-                  keyboardType: TextInputType.multiline,
-                  focusNode: _descriptionFN,
-                  onSaved: (value) {
-                    editedGame = Game(
-                      place: editedGame.place,
-                      lastModifiedOn: editedGame.lastModifiedOn,
-                      lastModifiedBy: editedGame.lastModifiedBy,
-                      description: value,
-                      date: editedGame.date,
-                      id: editedGame.id,
-                      title: editedGame.title,
-                      imageUrl: editedGame.imageUrl,
-                    );
-                  },
-                  validator: (value) => _validateText(value),
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Luogo'),
-                  // textInputAction: TextInputAction.next,
-                  focusNode: _placeFN,
-                  onSaved: (value) {
-                    editedGame = Game(
-                      place: value,
-                      lastModifiedOn: editedGame.lastModifiedOn,
-                      lastModifiedBy: editedGame.lastModifiedBy,
-                      description: editedGame.description,
-                      date: editedGame.date,
-                      id: editedGame.id,
-                      title: editedGame.title,
-                      imageUrl: editedGame.imageUrl,
-                    );
-                  },
-                  validator: (value) => _validateText(value),
-                ),
-                TextFormField(
-                  // textInputAction: TextInputAction.done
-                  keyboardType: TextInputType.datetime,
-                  decoration: InputDecoration(labelText: 'Data'),
-                  controller: _dateController,
-                  validator: (value) => _validateText(value),
-                  onTap: () async {
-                    FocusScope.of(context).unfocus();
-                    DateTime date = DateTime.now();
+            child: SingleChildScrollView(
+              child: Column(
+                // itemExtent: 100,
+                // reverse: true,
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Titolo'),
+                    textInputAction: TextInputAction.next,
+                    autofocus: true,
+                    onFieldSubmitted: (_) =>
+                        FocusScope.of(context).requestFocus(_descriptionFN),
+                    onSaved: (value) {
+                      editedGame = Game(
+                        place: editedGame.place,
+                        lastModifiedOn: editedGame.lastModifiedOn,
+                        lastModifiedBy: editedGame.lastModifiedBy,
+                        description: editedGame.description,
+                        date: editedGame.date,
+                        id: editedGame.id,
+                        title: value,
+                        imageUrl: editedGame.imageUrl,
+                      );
+                    },
+                    validator: (value) => _validateText(value),
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Descrizione'),
+                    maxLines: 3,
+                    keyboardType: TextInputType.multiline,
+                    focusNode: _descriptionFN,
+                    onSaved: (value) {
+                      editedGame = Game(
+                        place: editedGame.place,
+                        lastModifiedOn: editedGame.lastModifiedOn,
+                        lastModifiedBy: editedGame.lastModifiedBy,
+                        description: value,
+                        date: editedGame.date,
+                        id: editedGame.id,
+                        title: editedGame.title,
+                        imageUrl: editedGame.imageUrl,
+                      );
+                    },
+                    validator: (value) => _validateText(value),
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Luogo'),
+                    // textInputAction: TextInputAction.next,
+                    focusNode: _placeFN,
+                    onSaved: (value) {
+                      editedGame = Game(
+                        place: value,
+                        lastModifiedOn: editedGame.lastModifiedOn,
+                        lastModifiedBy: editedGame.lastModifiedBy,
+                        description: editedGame.description,
+                        date: editedGame.date,
+                        id: editedGame.id,
+                        title: editedGame.title,
+                        imageUrl: editedGame.imageUrl,
+                      );
+                    },
+                    validator: (value) => _validateText(value),
+                  ),
+                  TextFormField(
+                    // textInputAction: TextInputAction.done
+                    keyboardType: TextInputType.datetime,
+                    decoration: InputDecoration(labelText: 'Data'),
+                    controller: _dateController,
+                    validator: (value) => _validateText(value),
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      DateTime date = DateTime.now();
 
-                    date = await showDatePicker(
-                      context: context,
-                      initialDate: date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
+                      date = await showDatePicker(
+                        context: context,
+                        initialDate: date,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
 
-                    if (date == null) return;
+                      if (date == null) return;
 
-                    _dateController.text =
-                        DateFormat('dd/MM/yyyy').format(date);
+                      _dateController.text =
+                          DateFormat('dd/MM/yyyy').format(date);
 
-                    editedGame = Game(
-                      place: editedGame.place,
-                      lastModifiedOn: editedGame.lastModifiedOn,
-                      lastModifiedBy: editedGame.lastModifiedBy,
-                      description: editedGame.description,
-                      date: date,
-                      id: editedGame.id,
-                      title: editedGame.title,
-                      imageUrl: editedGame.imageUrl,
-                    );
-                  },
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    FocusScope.of(context).unfocus();
+                      editedGame = Game(
+                        place: editedGame.place,
+                        lastModifiedOn: editedGame.lastModifiedOn,
+                        lastModifiedBy: editedGame.lastModifiedBy,
+                        description: editedGame.description,
+                        date: date,
+                        id: editedGame.id,
+                        title: editedGame.title,
+                        imageUrl: editedGame.imageUrl,
+                      );
+                    },
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
 
-                    final picker = ImagePicker();
-                    final pickedImage =
-                        await picker.getImage(source: ImageSource.gallery);
+                      final picker = ImagePicker();
+                      final pickedImage =
+                          await picker.getImage(source: ImageSource.gallery);
 
-                    _urlController.text = pickedImage.path;
+                      _urlController.text = pickedImage.path;
 
-                    editedGame = Game(
-                      place: editedGame.place,
-                      lastModifiedOn: editedGame.lastModifiedOn,
-                      lastModifiedBy: editedGame.lastModifiedBy,
-                      description: editedGame.description,
-                      date: editedGame.date,
-                      id: editedGame.id,
-                      title: editedGame.title,
-                      imageUrl: pickedImage.path,
-                    );
+                      editedGame = Game(
+                        place: editedGame.place,
+                        lastModifiedOn: editedGame.lastModifiedOn,
+                        lastModifiedBy: editedGame.lastModifiedBy,
+                        description: editedGame.description,
+                        date: editedGame.date,
+                        id: editedGame.id,
+                        title: editedGame.title,
+                        imageUrl: pickedImage.path,
+                      );
 
-                    setState(() {});
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: 400,
-                      height: 400,
-                      child: Card(
-                        clipBehavior: Clip.hardEdge,
-                        child: editedGame.imageUrl != ''
-                            ? Image.file(File(editedGame.imageUrl))
-                            : Center(child: Text('+ Scegli un\'immagine')),
+                      setState(() {});
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12.0,
+                        horizontal: 100,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1.0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
+                              color: Theme.of(context).cardColor),
+                          child: editedGame.imageUrl != ''
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Image.file(
+                                    File(editedGame.imageUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Center(child: Text('+ Scegli un\'immagine')),
+                        ),
                       ),
                     ),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
           ),
         ),

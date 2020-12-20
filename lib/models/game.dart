@@ -1,4 +1,4 @@
-import 'package:quiver/core.dart';
+import 'package:flutter/foundation.dart';
 
 class Game {
   final String id;
@@ -9,26 +9,29 @@ class Game {
   final String lastModifiedBy;
   final DateTime lastModifiedOn;
   final String imageUrl;
+  final String hostTeamId;
 
   Game(
-      {this.id,
-      this.title,
-      this.description,
-      this.place,
-      this.date,
-      this.lastModifiedBy,
-      this.lastModifiedOn,
-      this.imageUrl});
+      {@required this.id,
+      @required this.title,
+      @required this.description,
+      @required this.place,
+      @required this.date,
+      @required this.lastModifiedBy,
+      @required this.lastModifiedOn,
+      @required this.imageUrl,
+      @required this.hostTeamId});
 
   Game.fromMap(String id, Map map)
       : this.id = map['id'],
         this.title = map['title'],
         this.description = map['description'],
         this.place = map['place'],
-        this.date = map['date'],
+        this.date = DateTime.tryParse(map['date']),
         this.lastModifiedBy = map['lastModifiedBy'],
-        this.lastModifiedOn = map['lastModifiedOn'],
-        this.imageUrl = map['imageUrl'];
+        this.lastModifiedOn = DateTime.tryParse(map['lastModifiedOn']),
+        this.imageUrl = map['imageUrl'],
+        this.hostTeamId = map['hostTeamId'];
 
   Map<String, dynamic> get asMap {
     return {
@@ -40,6 +43,7 @@ class Game {
       'lastModifiedBy': lastModifiedBy,
       'lastModifiedOn': lastModifiedOn.toIso8601String(),
       'imageUrl': imageUrl,
+      'hostTeamId': hostTeamId,
     };
   }
 }

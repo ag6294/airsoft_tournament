@@ -23,6 +23,11 @@ class HomeRoute extends StatelessWidget {
                   await Navigator.of(context).pushNamed(GamesRoute.routeName);
                 },
               ),
+              ElevatedButton(
+                child: Text('Logout'),
+                onPressed:
+                    Provider.of<LoginProvider>(context, listen: false).logOut,
+              )
             ],
           ),
         ),

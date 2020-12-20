@@ -26,12 +26,32 @@ class _SignInFormState extends State<SignInForm> {
   final _formKey = GlobalKey<FormState>();
 
   bool isSigningUp = false;
-  bool isLoading = false;
+  bool isLoading = true;
 
   String email;
   String password1;
   String password2;
   String nickname;
+
+  @override
+  void initState() {
+    super.initState();
+    tryAutoLogin();
+  }
+
+  Future<void> tryAutoLogin() async {
+    try {
+      await Provider.of<LoginProvider>(context, listen: false).tryAutoSignIn();
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      _showDialog(e.toString());
+    }
+  }
 
   void updateEmail(String newValue) {
     email = newValue.trim();

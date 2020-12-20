@@ -24,8 +24,11 @@ class FirebaseHelper {
       );
       await uc.user.updateProfile(displayName: nickname);
       User user = _auth.currentUser; //uc.user;
-      Player playerTemp =
-          Player(id: 'null', email: user.email, nickname: user.displayName);
+      Player playerTemp = Player(
+          id: 'null',
+          email: user.email,
+          nickname: user.displayName,
+          isGM: false);
 
       var _authToken = await user.getIdToken();
       var url = endPoint + '/players.json?auth=$_authToken';
@@ -44,6 +47,7 @@ class FirebaseHelper {
         id: playerId,
         nickname: playerTemp.nickname,
         email: playerTemp.email,
+        isGM: playerTemp.isGM,
         teamId: null,
       );
     } on Exception catch (e) {
@@ -78,6 +82,10 @@ class FirebaseHelper {
     }
   }
 
+  static Future<void> userLogout() async {
+    await _auth.signOut();
+  }
+
   static Future<Team> createTeam({String name, String password}) async {
     final _authToken = await _auth.currentUser.getIdToken();
     final url = endPoint + '/teams.json?auth=$_authToken';
@@ -90,7 +98,8 @@ class FirebaseHelper {
           'password': password,
         }));
 
-    print(response.body);
+    print(
+        '[FirebaseHelper/userSignUp] POST to /teams resolved in ${response.body}');
 
     return Team(id: json.decode(response.body)['name'], name: name);
   }
@@ -98,19 +107,24 @@ class FirebaseHelper {
   static Future<Player> addCurrentPlayerToTeam(
       String teamId, Player loggedPlayer) async {
     final _authToken = await _auth.currentUser.getIdToken();
-
     var url = endPoint + '/teams/$teamId/players.json?auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/userSignUp] PATCH to /players/${loggedPlayer.id} ${loggedPlayer.asMap} ');
+
     await http.patch(url,
         body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
 
     url = endPoint + '/players/${loggedPlayer.id}.json?auth=$_authToken';
-    await http.patch(url, body: json.encode({'teamId': teamId}));
+    await http.patch(url,
+        body: json.encode({'teamId': teamId, 'isGM': loggedPlayer.isGM}));
 
     return Player(
       id: loggedPlayer.id,
       email: loggedPlayer.email,
       nickname: loggedPlayer.email,
       teamId: teamId,
+      isGM: loggedPlayer.isGM,
     );
   }
 
@@ -134,7 +148,7 @@ class FirebaseHelper {
     }
   }
 
-  static Future<Team> getTeambyId(String id) async {
+  static Future<Team> getTeamById(String id) async {
     try {
       final _authToken = await _auth.currentUser.getIdToken();
       final url = endPoint + '/teams/$id.json?auth=$_authToken';
@@ -180,6 +194,7 @@ class FirebaseHelper {
       lastModifiedOn: game.lastModifiedOn,
       place: game.place,
       title: game.title,
+      hostTeamId: game.hostTeamId,
     );
 
     url = endPoint + '/games/$gameId.json?auth=$_authToken';
@@ -190,5 +205,20 @@ class FirebaseHelper {
     print(response.body);
 
     return uploadedGame;
+  }
+
+  static Future<List<Game>> fetchGames(String teamId) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final url = endPoint +
+        '/games.json?orderBy="hostTeamId"&equalTo="$teamId"&auth=$_authToken';
+
+    print('[FirebaseHelper/fetchTeams] GET  /teams where hostTeamId : $teamId');
+
+    final response = await http.get(url);
+    Map<String, dynamic> map = json.decode(response.body);
+
+    print('[FirebaseHelper/fetchTeams] GET  /teams resolved to $map');
+
+    return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
   }
 }

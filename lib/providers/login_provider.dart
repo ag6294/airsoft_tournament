@@ -1,4 +1,5 @@
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
+import 'package:airsoft_tournament/helpers/shared_preferences_helper.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:flutter/foundation.dart';
@@ -33,7 +34,10 @@ class LoginProvider extends ChangeNotifier {
       _loggedPlayer = await FirebaseHelper.userSignIn(email, pwd);
       if (loggedPlayer.teamId != null)
         _loggedPlayerTeam =
-            await FirebaseHelper.getTeambyId(loggedPlayer.teamId);
+            await FirebaseHelper.getTeamById(loggedPlayer.teamId);
+
+      await SharedPreferencesHelper.storeLoginData(email, pwd);
+
       notifyListeners();
     } catch (e) {
       print(e);
@@ -41,11 +45,33 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> tryAutoSignIn() async {
+    print('[LoginProvider/tryAutoSignIn] Starting');
+
+    final loginMap = await SharedPreferencesHelper.getLoginData();
+
+    if (loginMap != null) {
+      print(
+          '[LoginProvider/tryAutoSignIn] User found in storage: ${loginMap['email']}');
+      await trySignIn(loginMap['email'], loginMap['password']);
+    }
+    print('[LoginProvider/tryAutoSignIn] No user found in storage');
+  }
+
+  Future<void> logOut() async {
+    await SharedPreferencesHelper.logout();
+    await FirebaseHelper.userLogout();
+    _loggedPlayer = null;
+    _loggedPlayerTeam = null;
+    notifyListeners();
+  }
+
   Future<void> trySignUp(String email, String pwd, String nickname) async {
     print('[LoginProvider/trySignup] $nickname | $email - $pwd');
 
     try {
       _loggedPlayer = await FirebaseHelper.userSignUp(email, pwd, nickname);
+      await SharedPreferencesHelper.storeLoginData(email, pwd);
       notifyListeners();
     } catch (e) {
       print(e);
@@ -61,9 +87,16 @@ class LoginProvider extends ChangeNotifier {
       password: pwd,
     );
 
+    _loggedPlayer = Player(
+        id: _loggedPlayer.id,
+        isGM: true,
+        email: _loggedPlayer.email,
+        nickname: _loggedPlayer.nickname,
+        teamId: loggedPlayer.teamId);
+
     _loggedPlayer =
         await FirebaseHelper.addCurrentPlayerToTeam(team.id, loggedPlayer);
-    _loggedPlayerTeam = await FirebaseHelper.getTeambyId(loggedPlayer.teamId);
+    _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
     notifyListeners();
   }
 
@@ -73,7 +106,7 @@ class LoginProvider extends ChangeNotifier {
 
     _loggedPlayer =
         await FirebaseHelper.addCurrentPlayerToTeam(teamId, loggedPlayer);
-    _loggedPlayerTeam = await FirebaseHelper.getTeambyId(teamId);
+    _loggedPlayerTeam = await FirebaseHelper.getTeamById(teamId);
     notifyListeners();
   }
 

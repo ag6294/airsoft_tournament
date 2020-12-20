@@ -1,4 +1,5 @@
 import 'package:airsoft_tournament/models/player.dart';
+import 'package:flutter/foundation.dart';
 
 class Team {
   final String id;
@@ -6,13 +7,20 @@ class Team {
   final String password;
   final List<Player> players;
 
-  Team({this.id, this.name, this.players, this.password});
+  Team({
+    @required this.id,
+    @required this.name,
+    @required this.players,
+    @required this.password,
+  });
 
   Team.fromMap(String id, Map<String, dynamic> map)
       : this.id = id,
         this.name = map['name'],
         this.password = map['password'],
-        this.players = List<Player>.from(map['players']
-            .map((key, value) => MapEntry(key, Player.fromMap(key, value)))
-            .values);
+        this.players = map['players'] != null
+            ? List<Player>.from(map['players']
+                .map((key, value) => MapEntry(key, Player.fromMap(key, value)))
+                .values)
+            : [];
 }

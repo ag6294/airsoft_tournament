@@ -1,19 +1,14 @@
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:airsoft_tournament/models/game.dart';
+import './login_provider.dart';
 
 class GamesProvider extends ChangeNotifier {
-  List<Game> _games = [
-    Game(
-      id: '123',
-      date: DateTime.now(),
-      title: 'Titolo',
-      description: 'Descrizione breve',
-      lastModifiedBy: 'Ale',
-      lastModifiedOn: DateTime.now(),
-      place: 'Chivasso as always',
-    )
-  ];
+  List<Game> _games = [];
+
+  GamesProvider() {
+    print('[GameProvider] Constructor');
+  }
 
   List<Game> get games => _games;
 
@@ -21,5 +16,11 @@ class GamesProvider extends ChangeNotifier {
     games.add(await FirebaseHelper.addGame(newGame));
 
     notifyListeners();
+  }
+
+  Future<List<Game>> fetchAndSetGames(String teamId) async {
+    if (games.isEmpty) _games = await FirebaseHelper.fetchGames(teamId);
+
+    return games;
   }
 }
