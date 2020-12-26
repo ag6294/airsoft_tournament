@@ -1,3 +1,6 @@
+import 'dart:wasm';
+
+import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/widgets/forms/form_fields.dart';
 import 'package:flutter/material.dart';
@@ -101,39 +104,68 @@ class _SignInFormState extends State<SignInForm> {
         key: _formKey,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              if (isSigningUp)
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: NameFormField(updateNickname),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: EmailFormField(updateEmail),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: PasswordFormField(updatePwd1),
-              ),
-              if (isSigningUp)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ConfirmPasswordFormField(updatePwd2, password1),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  FlatButton(
-                    onPressed: () => setState(() {
-                      isSigningUp = !isSigningUp;
-                    }),
-                    child: Text(isSigningUp
-                        ? 'Sei già registrato?'
-                        : 'Non sei ancora registrato?'),
+                  padding: const EdgeInsets.only(left: 8.0, top: 60, bottom: 8),
+                  child: Text(
+                    isSigningUp ? 'Benvenuto,' : 'Bentornato,',
+                    style: kPageTitle,
                   ),
-                  ElevatedButton(
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 100),
+                  child: Text(
+                    isSigningUp
+                        ? 'Iscriviti per continuare!'
+                        : 'Fai login per continuare!',
+                    style: kPageSubtitle,
+                  ),
+                ),
+                if (isSigningUp)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: NameFormField(updateNickname),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: EmailFormField(updateEmail),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: PasswordFormField(updatePwd1),
+                ),
+                if (isSigningUp)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ConfirmPasswordFormField(updatePwd2, password1),
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        isSigningUp = !isSigningUp;
+                      }),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(isSigningUp
+                            ? 'Sei già registrato?'
+                            : 'Non sei ancora registrato?'),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 8.0,
+                    right: 8.0,
+                    top: 20.0,
+                  ),
+                  child: ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState.validate()) {
                         setState(() {
@@ -158,13 +190,16 @@ class _SignInFormState extends State<SignInForm> {
                         });
                       }
                     },
-                    child: Text(
-                      isSigningUp ? 'Registrati' : 'Login',
+                    child: Padding(
+                      padding: const EdgeInsets.all(14.0),
+                      child: Text(
+                        isSigningUp ? 'Registrati' : 'Login',
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

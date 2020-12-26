@@ -14,3 +14,15 @@ const TextStyle kMediumText = TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.bold,
 );
+
+const TextStyle kPageTitle = TextStyle(
+    fontSize: 40,
+    fontWeight: FontWeight.bold,
+    color: Colors.white70,
+    letterSpacing: 1.5);
+
+const TextStyle kPageSubtitle = TextStyle(
+  fontSize: 24,
+  fontWeight: FontWeight.bold,
+  color: Colors.white38,
+);

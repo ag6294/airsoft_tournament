@@ -4,6 +4,7 @@ import 'package:path/path.dart' as ph;
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
+import 'package:airsoft_tournament/models/game_participation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -195,6 +196,7 @@ class FirebaseHelper {
       place: game.place,
       title: game.title,
       hostTeamId: game.hostTeamId,
+      hostTeamName: game.hostTeamName,
     );
 
     url = endPoint + '/games/$gameId.json?auth=$_authToken';
@@ -212,13 +214,88 @@ class FirebaseHelper {
     final url = endPoint +
         '/games.json?orderBy="hostTeamId"&equalTo="$teamId"&auth=$_authToken';
 
-    print('[FirebaseHelper/fetchTeams] GET  /teams where hostTeamId : $teamId');
+    print('[FirebaseHelper/fetchTeams] GET  /games where hostTeamId : $teamId');
 
     final response = await http.get(url);
     Map<String, dynamic> map = json.decode(response.body);
 
-    print('[FirebaseHelper/fetchTeams] GET  /teams resolved to $map');
+    print('[FirebaseHelper/fetchTeams] GET  /games resolved to $map');
 
     return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
+  }
+
+  static Future<List<GameParticipation>> fetchUserParticipations(
+      String playerId) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final url = endPoint +
+        '/participations.json?orderBy="playerId"&equalTo="$playerId"&auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/participations] GET  /participations where playerId : $playerId');
+
+    final response = await http.get(url);
+    Map<String, dynamic> map = json.decode(response.body);
+
+    print(
+        '[FirebaseHelper/fetchParticipations] GET  /participations resolved to $map');
+
+    return map
+        .map((k, v) => MapEntry(k, GameParticipation.fromMap(k, v)))
+        .values
+        .toList();
+  }
+
+  static Future<List<GameParticipation>> fetchGameParticipations(
+      String gameId) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final url = endPoint +
+        '/participations.json?orderBy="gameId"&equalTo="$gameId"&auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/participations] GET  /participations where teamId : $gameId');
+
+    final response = await http.get(url);
+    Map<String, dynamic> map = json.decode(response.body);
+
+    print(
+        '[FirebaseHelper/fetchParticipations] GET  /participations resolved to $map');
+
+    return map
+        .map((k, v) => MapEntry(k, GameParticipation.fromMap(k, v)))
+        .values
+        .toList();
+  }
+
+  static editParticipation(GameParticipation participation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final url = endPoint + '/participations/${participation.id}.json?';
+
+    print(
+        '[FirebaseHelper/editParticipation] POST to /participations, body = ${participation.asMap}');
+
+    await http.post(url, body: json.encode(participation.asMap));
+
+    return participation;
+  }
+
+  static addNewParticipation(GameParticipation participation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/participations.json?auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/addNewParticpation] POST to /participations, body = ${participation.asMap}');
+    final response =
+        await http.post(url, body: json.encode(participation.asMap));
+
+    print(
+        '[FirebaseHelper/fetchParticipations] GET  /participations resolved in ${json.decode(response.body)}');
+
+    final id = json.decode(response.body)['name'];
+
+    url = endPoint + '/participations/$id.json?auth=$_authToken';
+
+    await http.patch(url, body: json.encode({'id': id}));
+
+    return GameParticipation.fromMap(id, participation.asMap);
   }
 }

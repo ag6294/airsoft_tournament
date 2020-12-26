@@ -8,6 +8,9 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/models/game.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:intl/intl.dart';
 
 class GamesRoute extends StatefulWidget {
   static const routeName = '/games';
@@ -24,32 +27,38 @@ class _GamesRouteState extends State<GamesRoute> {
 
     return Scaffold(
       body: FutureBuilder(
-        future: Provider.of<GamesProvider>(context).fetchAndSetGames(teamId),
+        future: Provider.of<GamesProvider>(context, listen: false)
+            .fetchAndSetGames(teamId),
         builder: (context, snapshot) {
-          var list = snapshot.hasData ? snapshot.data : [];
-
           return ModalProgressHUD(
             inAsyncCall: snapshot.connectionState != ConnectionState.done,
             child: RefreshIndicator(
               onRefresh: () async {
-                list = await Provider.of<GamesProvider>(context, listen: false)
-                    .fetchAndSetGames(teamId);
+                await Provider.of<GamesProvider>(
+                  context,
+                  listen: false,
+                ).fetchAndSetGames(teamId);
               },
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    title: Center(child: Text('Le tue giocate')),
-                    actions: [_menuPopup(context)],
-                    floating: true,
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => GameCard(list[index]),
-                      childCount: list.length,
+              child:
+                  Consumer<GamesProvider>(builder: (context, gamesProvider, _) {
+                final list = Provider.of<GamesProvider>(context).games;
+
+                return CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      title: Center(child: Text('Le tue giocate')),
+                      actions: [_menuPopup(context)],
+                      floating: true,
                     ),
-                  ),
-                ],
-              ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => GameCard(list[index]),
+                        childCount: list.length,
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
           );
         },
@@ -76,6 +85,7 @@ class GameCard extends StatelessWidget {
           ),
           clipBehavior: Clip.hardEdge,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (game.imageUrl != null)
                 AspectRatio(
@@ -89,7 +99,7 @@ class GameCard extends StatelessWidget {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Text(
                   game.title,
                   style: kCardTitle,
@@ -97,6 +107,28 @@ class GameCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 12.0,
+                      bottom: 12.0,
+                      right: 12.0,
+                    ),
+                    child: Text(game.hostTeamName ?? 'Nome Team non presente'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      right: 12.0,
+                      bottom: 12.0,
+                    ),
+                    child: Text(
+                      DateFormat('dd/MM/yyyy').format(game.date),
+                    ),
+                  )
+                ],
+              )
             ],
           ),
         ),

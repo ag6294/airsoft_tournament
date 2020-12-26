@@ -66,10 +66,13 @@ class _EditGameRouteState extends State<EditGameRoute> {
       try {
         final _loggedPlayer =
             Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
+        final _loggedTeam =
+            Provider.of<LoginProvider>(context, listen: false).loggedPlayerTeam;
         await Provider.of<GamesProvider>(context, listen: false).addNewGame(
           Game(
             lastModifiedBy: _loggedPlayer.id,
-            hostTeamId: _loggedPlayer.teamId,
+            hostTeamId: _loggedTeam.id,
+            hostTeamName: _loggedTeam.name,
             lastModifiedOn: DateTime.now(),
             place: editedGame.place,
             title: editedGame.title,

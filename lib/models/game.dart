@@ -10,6 +10,7 @@ class Game {
   final DateTime lastModifiedOn;
   final String imageUrl;
   final String hostTeamId;
+  final String hostTeamName;
 
   Game(
       {@required this.id,
@@ -20,7 +21,8 @@ class Game {
       @required this.lastModifiedBy,
       @required this.lastModifiedOn,
       @required this.imageUrl,
-      @required this.hostTeamId});
+      @required this.hostTeamId,
+      @required this.hostTeamName});
 
   Game.fromMap(String id, Map map)
       : this.id = map['id'],
@@ -31,7 +33,8 @@ class Game {
         this.lastModifiedBy = map['lastModifiedBy'],
         this.lastModifiedOn = DateTime.tryParse(map['lastModifiedOn']),
         this.imageUrl = map['imageUrl'],
-        this.hostTeamId = map['hostTeamId'];
+        this.hostTeamId = map['hostTeamId'],
+        this.hostTeamName = map['hostTeamName'];
 
   Map<String, dynamic> get asMap {
     return {
@@ -44,6 +47,7 @@ class Game {
       'lastModifiedOn': lastModifiedOn.toIso8601String(),
       'imageUrl': imageUrl,
       'hostTeamId': hostTeamId,
+      'hostTeamName': hostTeamName,
     };
   }
 }
