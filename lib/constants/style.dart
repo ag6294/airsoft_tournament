@@ -10,9 +10,18 @@ const TextStyle kTitle = TextStyle(
   fontWeight: FontWeight.bold,
 );
 
+const TextStyle kBigText = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.bold,
+);
+
 const TextStyle kMediumText = TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.bold,
+);
+
+const TextStyle kSmallText = TextStyle(
+  fontSize: 12,
 );
 
 const TextStyle kPageTitle = TextStyle(

@@ -28,7 +28,7 @@ class _GamesRouteState extends State<GamesRoute> {
     return Scaffold(
       body: FutureBuilder(
         future: Provider.of<GamesProvider>(context, listen: false)
-            .fetchAndSetGames(teamId),
+            .fetchAndSetGames(teamId, false),
         builder: (context, snapshot) {
           return ModalProgressHUD(
             inAsyncCall: snapshot.connectionState != ConnectionState.done,
@@ -37,7 +37,7 @@ class _GamesRouteState extends State<GamesRoute> {
                 await Provider.of<GamesProvider>(
                   context,
                   listen: false,
-                ).fetchAndSetGames(teamId);
+                ).fetchAndSetGames(teamId, true);
               },
               child:
                   Consumer<GamesProvider>(builder: (context, gamesProvider, _) {
@@ -116,7 +116,7 @@ class GameCard extends StatelessWidget {
                       bottom: 12.0,
                       right: 12.0,
                     ),
-                    child: Text(game.hostTeamName ?? 'Nome Team non presente'),
+                    child: Text(game.place),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(

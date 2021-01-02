@@ -4,6 +4,7 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
 
 import 'package:airsoft_tournament/models/game_participation.dart';
+import 'package:airsoft_tournament/routes/games_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,14 +12,35 @@ import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/models/player.dart';
+import 'package:airsoft_tournament/routes/game_participations.dart';
 
-class GameDetailRoute extends StatelessWidget {
+import 'edit_game_route.dart';
+
+class GameDetailRoute extends StatefulWidget {
   static const routeName = '/game-detail';
 
   @override
-  Widget build(BuildContext context) {
-    final Game game = ModalRoute.of(context).settings.arguments;
+  _GameDetailRouteState createState() => _GameDetailRouteState();
+}
 
+class _GameDetailRouteState extends State<GameDetailRoute> {
+  Game game;
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    game = ModalRoute.of(context).settings.arguments;
+  }
+
+  void onModifyPop(Game editedGame) {
+    setState(() {
+      game = editedGame;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Provider.of<GamesProvider>(context, listen: false)
         .fetchAndSetGameParticipations(game.id);
 
@@ -26,7 +48,7 @@ class GameDetailRoute extends StatelessWidget {
       // appBar: AppBar(),
       body: CustomScrollView(
         slivers: [
-          GameCover(game),
+          GameCover(game, onModifyPop),
           GameParticipations(game),
           GameDetails(game),
         ],
@@ -37,12 +59,14 @@ class GameDetailRoute extends StatelessWidget {
 
 class GameCover extends StatelessWidget {
   final Game game;
+  final Function editCallBack;
 
-  GameCover(this.game);
+  GameCover(this.game, this.editCallBack);
 
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
+      actions: [MenuPopUp(game, editCallBack)],
       floating: true,
       flexibleSpace: Hero(
         tag: game.id,
@@ -71,7 +95,8 @@ class GameCover extends StatelessWidget {
               bottomRight: Radius.circular(24),
             ),
           ),
-          child: Center(
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Text(
               game.title,
               style: kCardTitle,
@@ -145,77 +170,86 @@ class GameParticipations extends StatelessWidget {
     return Consumer<GamesProvider>(builder: (context, gamesProvider, _) {
       final Player player =
           Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
-      final hasReplied = gamesProvider.loggedUserParticipations.isEmpty
+      final gameParticipations = gamesProvider.gameParticipations;
+
+      final hasReplied = gameParticipations.isEmpty
           ? false
-          : gamesProvider.loggedUserParticipations.indexWhere(
-                  ((p) => p.playerId == player.id && p.gameId == game.id)) >
+          : gameParticipations.indexWhere(((p) => p.playerId == player.id)) >
               -1;
       final playerParticipation = hasReplied
-          ? gamesProvider.loggedUserParticipations
-              .where((p) => p.playerId == player.id && p.gameId == game.id)
-              .first
+          ? gameParticipations.where((p) => p.playerId == player.id).first
           : null;
       final isGoing = hasReplied ? playerParticipation.isGoing : false;
-      final gamePartecipations = gamesProvider.gameParticipations;
 
       return SliverList(
         delegate: SliverChildListDelegate(
           [
             if (!DateTime.now().isAfter(game.date))
               Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Fai sapere se parteciperai'),
-                  ),
-                  ToggleButtons(
-                    renderBorder: false,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'Parteciperò',
-                          style: kMediumText,
-                        ),
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('Parteciperai?'),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(
-                          'Non parteciperò',
-                          style: kMediumText,
-                        ),
+                      ToggleButtons(
+                        renderBorder: false,
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'Parteciperò',
+                              style: kMediumText,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Text(
+                              'Non parteciperò',
+                              style: kMediumText,
+                            ),
+                          ),
+                        ],
+                        isSelected: [
+                          hasReplied && isGoing,
+                          hasReplied && !isGoing,
+                        ],
+                        onPressed: (i) async {
+                          if (i == 0 && hasReplied && isGoing) return;
+                          if (i == 1 && hasReplied && !isGoing) return;
+
+                          final newParticipation = GameParticipation(
+                            id: playerParticipation?.id,
+                            gameId: game.id,
+                            gameName: game.title,
+                            isGoing: i == 0,
+                            playerId: player.id,
+                            playerName: player.nickname,
+                          );
+
+                          // playerParticipation = newParticipation;
+                          // hasReplied = true;
+                          await gamesProvider
+                              .editParticipation(newParticipation);
+                        },
                       ),
                     ],
-                    isSelected: [
-                      hasReplied && isGoing,
-                      hasReplied && !isGoing,
-                    ],
-                    onPressed: (i) async {
-                      if (i == 0 && hasReplied && isGoing) return;
-                      if (i == 1 && hasReplied && !isGoing) return;
-
-                      final newParticipation = GameParticipation(
-                        id: playerParticipation?.id,
-                        gameId: game.id,
-                        gameName: game.title,
-                        isGoing: i == 0,
-                        playerId: player.id,
-                        playerName: player.nickname,
-                      );
-
-                      // playerParticipation = newParticipation;
-                      // hasReplied = true;
-                      await gamesProvider.editParticipation(newParticipation);
-                    },
                   ),
-                  Text(
-                      'Parteciperanno alla giocata ${gamePartecipations.where((p) => p.isGoing).length} giocatori!'),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                        'Parteciperanno alla giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
+                  ),
                 ],
               ),
             if (DateTime.now().isAfter(game.date))
               Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     !hasReplied
@@ -226,12 +260,59 @@ class GameParticipations extends StatelessWidget {
                     style: kMediumText,
                   ),
                   Text(
-                      'Hanno partecipato a questa giocata ${gamePartecipations.where((p) => p.isGoing).length} giocatori!'),
+                      'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
                 ],
               ),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pushNamed(
+                  GameParticipationsRoute.routeName,
+                  arguments: game),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Vai alla lista dei partecipanti',
+                  style: kMediumText,
+                ),
+              ),
+            ),
           ],
         ),
       );
     });
+  }
+}
+
+class MenuPopUp extends StatelessWidget {
+  final Game game;
+  final Function editCallback;
+
+  MenuPopUp(this.game, this.editCallback);
+
+  @override
+  Widget build(BuildContext context) {
+    final itemsList = [
+      if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+        PopupMenuItem(
+          value: () => Navigator.of(context)
+              .pushNamed(EditGameRoute.routeName, arguments: game)
+              .then((value) => editCallback(value)),
+          child: Text('Modifica'),
+        ),
+      if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+        PopupMenuItem(
+          value: () {
+            Provider.of<GamesProvider>(context, listen: false).deleteGame(game);
+            Navigator.of(context).pop();
+          },
+          child: Text('Elimina'),
+        ),
+    ];
+
+    return PopupMenuButton<Function>(
+      enabled: itemsList.isNotEmpty,
+      onSelected: (value) => value(),
+      itemBuilder: (context) => itemsList,
+      offset: Offset(0, 50),
+    );
   }
 }

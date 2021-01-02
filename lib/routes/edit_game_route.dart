@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
+import 'package:airsoft_tournament/routes/game_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/constants/exceptions.dart' as exc;
+import 'package:airsoft_tournament/helpers/firebase_helper.dart' as fb;
 
 // ignore: must_be_immutable
 class EditGameRoute extends StatefulWidget {
@@ -28,6 +30,35 @@ class _EditGameRouteState extends State<EditGameRoute> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _urlController = TextEditingController();
 
+  var editedGame = Game(
+    place: '',
+    lastModifiedOn: DateTime.now(),
+    lastModifiedBy: '',
+    description: '',
+    date: null,
+    id: '',
+    title: '',
+    imageUrl: '',
+    hostTeamName: '',
+    hostTeamId: '',
+  );
+
+  var isEditing = false;
+  String oldImageUrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final Game args = ModalRoute.of(context).settings.arguments;
+    if (args != null) {
+      editedGame = args;
+      isEditing = true;
+      oldImageUrl = args.imageUrl;
+      _dateController.text = DateFormat('dd/MM/yyyy').format(args.date);
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -38,50 +69,44 @@ class _EditGameRouteState extends State<EditGameRoute> {
     _urlController.dispose();
   }
 
-  var editedGame = Game(
-    place: '',
-    lastModifiedOn: DateTime.now(),
-    lastModifiedBy: '',
-    description: '',
-    date: null,
-    id: '',
-    title: '',
-    imageUrl: '',
-  );
-
-  void _updateGame(Game game) {
-    editedGame = game;
-  }
-
   final _formKey = GlobalKey<FormState>();
 
   void _saveForm(BuildContext context) async {
-    if (_formKey.currentState.validate()) {
+    if (_formKey.currentState.validate() && editedGame.imageUrl != '') {
       _formKey.currentState.save();
 
       setState(() {
         _isLoading = true;
       });
+      final _loggedPlayer =
+          Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
+      final _loggedTeam =
+          Provider.of<LoginProvider>(context, listen: false).loggedPlayerTeam;
 
+      var newGame = Game(
+        lastModifiedBy: _loggedPlayer.id,
+        hostTeamId: _loggedTeam.id,
+        hostTeamName: _loggedTeam.name,
+        lastModifiedOn: DateTime.now(),
+        place: editedGame.place,
+        title: editedGame.title,
+        description: editedGame.description,
+        date: editedGame.date,
+        imageUrl: editedGame.imageUrl,
+        id: editedGame.id,
+      );
       try {
-        final _loggedPlayer =
-            Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
-        final _loggedTeam =
-            Provider.of<LoginProvider>(context, listen: false).loggedPlayerTeam;
-        await Provider.of<GamesProvider>(context, listen: false).addNewGame(
-          Game(
-            lastModifiedBy: _loggedPlayer.id,
-            hostTeamId: _loggedTeam.id,
-            hostTeamName: _loggedTeam.name,
-            lastModifiedOn: DateTime.now(),
-            place: editedGame.place,
-            title: editedGame.title,
-            description: editedGame.description,
-            date: editedGame.date,
-            imageUrl: editedGame.imageUrl,
-            id: editedGame.id,
-          ),
-        );
+        if (!isEditing)
+          newGame = await Provider.of<GamesProvider>(context, listen: false)
+              .addNewGame(
+            newGame,
+          );
+        else
+          newGame =
+              await Provider.of<GamesProvider>(context, listen: false).editGame(
+            newGame,
+            oldImageUrl,
+          );
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -92,8 +117,11 @@ class _EditGameRouteState extends State<EditGameRoute> {
       setState(() {
         _isLoading = false;
       });
-
-      Navigator.of(context).pop();
+      if (isEditing)
+        Navigator.of(context).pop(newGame);
+      else
+        Navigator.of(context).pushReplacementNamed(GameDetailRoute.routeName,
+            arguments: newGame);
     }
   }
 
@@ -119,6 +147,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
                 children: [
                   TextFormField(
                     decoration: InputDecoration(labelText: 'Titolo'),
+                    initialValue: editedGame.title,
                     textInputAction: TextInputAction.next,
                     autofocus: true,
                     onFieldSubmitted: (_) =>
@@ -133,6 +162,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         id: editedGame.id,
                         title: value,
                         imageUrl: editedGame.imageUrl,
+                        hostTeamId: editedGame.hostTeamId,
+                        hostTeamName: editedGame.hostTeamName,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -140,6 +171,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
                   TextFormField(
                     decoration: InputDecoration(labelText: 'Descrizione'),
                     maxLines: 3,
+                    initialValue: editedGame.description,
                     keyboardType: TextInputType.multiline,
                     focusNode: _descriptionFN,
                     onSaved: (value) {
@@ -152,6 +184,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         id: editedGame.id,
                         title: editedGame.title,
                         imageUrl: editedGame.imageUrl,
+                        hostTeamId: editedGame.hostTeamId,
+                        hostTeamName: editedGame.hostTeamName,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -160,6 +194,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
                     decoration: InputDecoration(labelText: 'Luogo'),
                     // textInputAction: TextInputAction.next,
                     focusNode: _placeFN,
+                    initialValue: editedGame.place,
                     onSaved: (value) {
                       editedGame = Game(
                         place: value,
@@ -170,6 +205,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         id: editedGame.id,
                         title: editedGame.title,
                         imageUrl: editedGame.imageUrl,
+                        hostTeamId: editedGame.hostTeamId,
+                        hostTeamName: editedGame.hostTeamName,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -182,7 +219,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
                     validator: (value) => _validateText(value),
                     onTap: () async {
                       FocusScope.of(context).unfocus();
-                      DateTime date = DateTime.now();
+                      DateTime date = editedGame.date ?? DateTime.now();
 
                       date = await showDatePicker(
                         context: context,
@@ -205,6 +242,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         id: editedGame.id,
                         title: editedGame.title,
                         imageUrl: editedGame.imageUrl,
+                        hostTeamId: editedGame.hostTeamId,
+                        hostTeamName: editedGame.hostTeamName,
                       );
                     },
                   ),
@@ -227,6 +266,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         id: editedGame.id,
                         title: editedGame.title,
                         imageUrl: pickedImage.path,
+                        hostTeamId: editedGame.hostTeamId,
+                        hostTeamName: editedGame.hostTeamName,
                       );
 
                       setState(() {});
@@ -247,10 +288,14 @@ class _EditGameRouteState extends State<EditGameRoute> {
                           child: editedGame.imageUrl != ''
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(24),
-                                  child: Image.file(
-                                    File(editedGame.imageUrl),
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: fb.FirebaseHelper.isNetworkImage(
+                                          editedGame.imageUrl)
+                                      ? Image.network(editedGame.imageUrl,
+                                          fit: BoxFit.cover)
+                                      : Image.file(
+                                          File(editedGame.imageUrl),
+                                          fit: BoxFit.cover,
+                                        ),
                                 )
                               : Center(child: Text('+ Scegli un\'immagine')),
                         ),

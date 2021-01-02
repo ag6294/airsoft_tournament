@@ -14,7 +14,7 @@ import 'dart:convert';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final FirebaseStorage _store = FirebaseStorage.instance;
 
-const endPoint = 'https://airsoft-tournament.firebaseio.com/';
+const endPoint = 'https://airsoft-tournament.firebaseio.com';
 
 class FirebaseHelper {
   static Future<Player> userSignUp(email, password, nickname) async {
@@ -252,13 +252,13 @@ class FirebaseHelper {
         '/participations.json?orderBy="gameId"&equalTo="$gameId"&auth=$_authToken';
 
     print(
-        '[FirebaseHelper/participations] GET  /participations where teamId : $gameId');
+        '[FirebaseHelper/fetchGameParticipations] GET  /participations where gameId : $gameId');
 
     final response = await http.get(url);
     Map<String, dynamic> map = json.decode(response.body);
 
     print(
-        '[FirebaseHelper/fetchParticipations] GET  /participations resolved to $map');
+        '[FirebaseHelper/fetchGameParticipations] GET  /participations resolved to $map');
 
     return map
         .map((k, v) => MapEntry(k, GameParticipation.fromMap(k, v)))
@@ -268,12 +268,13 @@ class FirebaseHelper {
 
   static editParticipation(GameParticipation participation) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint + '/participations/${participation.id}.json?';
+    final url =
+        endPoint + '/participations/${participation.id}.json?auth=$_authToken';
 
     print(
         '[FirebaseHelper/editParticipation] POST to /participations, body = ${participation.asMap}');
 
-    await http.post(url, body: json.encode(participation.asMap));
+    await http.patch(url, body: json.encode(participation.asMap));
 
     return participation;
   }
@@ -283,12 +284,12 @@ class FirebaseHelper {
     var url = endPoint + '/participations.json?auth=$_authToken';
 
     print(
-        '[FirebaseHelper/addNewParticpation] POST to /participations, body = ${participation.asMap}');
+        '[FirebaseHelper/addNewParticipation] POST to /participations, body = ${participation.asMap}');
     final response =
         await http.post(url, body: json.encode(participation.asMap));
 
     print(
-        '[FirebaseHelper/fetchParticipations] GET  /participations resolved in ${json.decode(response.body)}');
+        '[FirebaseHelper/addNewParticipation] POST to /participations, resolved in ${json.decode(response.body)}');
 
     final id = json.decode(response.body)['name'];
 
@@ -297,5 +298,81 @@ class FirebaseHelper {
     await http.patch(url, body: json.encode({'id': id}));
 
     return GameParticipation.fromMap(id, participation.asMap);
+  }
+
+  static Future<void> deleteGame(Game game) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/games/${game.id}.json?auth=$_authToken';
+
+    print('[FirebaseHelper/deleteGame] DELETE to /games, id : ${game.id}');
+    var response = await http.delete(url);
+    print(
+        '[FirebaseHelper/deleteGame] DELETE to /games, resolved in ${json.decode(response.body)}');
+
+    print(
+        '[FirebaseHelper/deleteGame] Removing image from storage : ${game.imageUrl}');
+    await _store.refFromURL(game.imageUrl).delete();
+
+    url = endPoint +
+        '/participations.json?orderBy="gameId"&equalTo="${game.id}"&auth=$_authToken';
+
+    print('[FirebaseHelper/deleteGame] DELETE to /participations, url : $url');
+    response = await http.delete(url);
+    print(
+        '[FirebaseHelper/deleteGame] DELETE to /participations, resolved in ${json.decode(response.body)}');
+  }
+
+  static Future<Game> editGame(Game game, String oldImageUrl) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/games/${game.id}.json?auth=$_authToken';
+    String imageUrl;
+
+    try {
+      if (!isNetworkImage(game.imageUrl)) {
+        removeFile(oldImageUrl);
+
+        final imageFile = File(game.imageUrl);
+        final ref = _store
+            .ref()
+            .child('game_images')
+            .child(game.id + ph.extension(imageFile.path));
+
+        await ref.putFile(imageFile);
+        imageUrl = await ref.getDownloadURL();
+      } else
+        imageUrl = game.imageUrl;
+
+      print(
+          '[FirebaseHelper/addGame] PATCH to /games, body = title : ${game.title}');
+
+      final uploadedGame = Game(
+        id: game.id,
+        imageUrl: imageUrl,
+        date: game.date,
+        description: game.description,
+        lastModifiedBy: game.lastModifiedBy,
+        lastModifiedOn: game.lastModifiedOn,
+        place: game.place,
+        title: game.title,
+        hostTeamId: game.hostTeamId,
+        hostTeamName: game.hostTeamName,
+      );
+
+      await http.patch(url, body: json.encode(uploadedGame.asMap));
+
+      return uploadedGame;
+    } catch (e) {
+      imageUrl = game.imageUrl;
+      throw (e);
+    }
+  }
+
+  static Future<void> removeFile(String url) async {
+    print('[FirebaseHelper/removeFile] Removing file from storage : ${url}');
+    await _store.refFromURL(url).delete();
+  }
+
+  static bool isNetworkImage(String url) {
+    return url.contains('firebasestorage');
   }
 }
