@@ -28,7 +28,6 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     game = ModalRoute.of(context).settings.arguments;
   }

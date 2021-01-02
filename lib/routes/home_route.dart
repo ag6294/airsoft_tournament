@@ -1,4 +1,6 @@
+import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
+import 'package:airsoft_tournament/widgets/KPIs/kpibox.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -18,11 +20,11 @@ class _HomeRouteState extends State<HomeRoute> {
   String playerId;
   String playerNickname;
   String teamName;
-  List<GameParticipation> playerParticipations;
+  bool isGM;
+  List<GameParticipation> playerParticipations = [];
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     playerId = Provider.of<LoginProvider>(
       context,
@@ -32,6 +34,10 @@ class _HomeRouteState extends State<HomeRoute> {
       context,
       listen: false,
     ).loggedPlayer.nickname;
+    isGM = Provider.of<LoginProvider>(
+      context,
+      listen: false,
+    ).loggedPlayer.isGM;
     teamName = Provider.of<LoginProvider>(
       context,
       listen: false,
@@ -42,9 +48,8 @@ class _HomeRouteState extends State<HomeRoute> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement initState
+    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
-
     playerParticipations =
         Provider.of<GamesProvider>(context).loggedUserParticipations;
   }
@@ -54,28 +59,105 @@ class _HomeRouteState extends State<HomeRoute> {
     return Scaffold(
       body: WillPopScope(
         onWillPop: () {},
-        child: Center(
+        child: SafeArea(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            // mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Logged in as $playerNickname, Team: $teamName !!'),
-              Text(
-                  'Hai partecipato a ${playerParticipations?.length} giocate!'),
-              ElevatedButton(
-                child: Text('Vai alla lista delle partite'),
-                onPressed: () async {
-                  await Navigator.of(context).pushNamed(GamesRoute.routeName);
-                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 8.0, top: 60, bottom: 8),
+                        child: Text(
+                          playerNickname,
+                          style: kPageTitle,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, bottom: 60),
+                        child: Text(
+                          isGM
+                              ? 'Game Maker dei $teamName'
+                              : 'Associato dei $teamName',
+                          style: kPageSubtitle,
+                        ),
+                      ),
+                    ],
+                  ),
+                  _settingsMenu(context),
+                ],
               ),
-              ElevatedButton(
-                child: Text('Logout'),
-                onPressed:
-                    Provider.of<LoginProvider>(context, listen: false).logOut,
-              )
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      KPIBox(
+                          value: playerParticipations
+                              ?.where((element) => element.isGoing)
+                              ?.length
+                              ?.toString(),
+                          label: 'Presenze'),
+                      KPIBox(
+                          value: playerParticipations
+                              ?.where((element) => !element.isGoing)
+                              ?.length
+                              ?.toString(),
+                          label: 'Assenze'),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      child: Text('Vai alla lista delle partite'),
+                      onPressed: () async {
+                        await Navigator.of(context)
+                            .pushNamed(GamesRoute.routeName);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+PopupMenuButton _settingsMenu(BuildContext context) {
+  final itemsList = [
+    PopupMenuItem(
+      value: () => Provider.of<LoginProvider>(context, listen: false).logOut(),
+      child: Text('Logout'),
+    ),
+    if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+      PopupMenuItem(
+        value: () {},
+        child: Text('Impostazioni team'),
+      ),
+  ];
+
+  return PopupMenuButton<Function>(
+    icon: Icon(Icons.settings),
+    enabled: itemsList.isNotEmpty,
+    onSelected: (value) {
+      value.call();
+    },
+    captureInheritedThemes: false,
+    itemBuilder: (_) => itemsList,
+    offset: Offset(0, 50),
+  );
 }
