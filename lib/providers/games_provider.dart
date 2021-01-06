@@ -20,6 +20,8 @@ class GamesProvider extends ChangeNotifier {
     ..sort((a, b) {
       if (a.isGoing && !b.isGoing) return -1;
       if (!a.isGoing && b.isGoing) return 1;
+      if (a.faction == null) return -1;
+      if (b.faction == null) return 1;
       return a.faction.compareTo(b.faction);
     });
 
@@ -73,7 +75,8 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> editParticipation(GameParticipation participation) async {
+  Future<void> editParticipation(
+      GameParticipation participation, bool isLoggedUserParticipation) async {
     print(
         '[GameProvider/editParticipation] starting for userId : ${participation.id} and gameId : ${participation.gameId}');
     if (participation.id != null) {
@@ -89,7 +92,8 @@ class GamesProvider extends ChangeNotifier {
     } else {
       final newParticipation =
           await FirebaseHelper.addNewParticipation(participation);
-      _loggedUserParticipations.add(newParticipation);
+      if (isLoggedUserParticipation)
+        _loggedUserParticipations.add(newParticipation);
       _gameParticipations.add(newParticipation);
     }
 

@@ -3,8 +3,10 @@ import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
-import 'package:airsoft_tournament/widgets/KPIs/kpibox.dart';
+import 'package:airsoft_tournament/widgets/box_and_texts//kpibox.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 
 class GameParticipationsRoute extends StatefulWidget {
@@ -104,6 +106,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
           );
         }),
       ),
+      persistentFooterButtons: [_ModalBottomSheetButton(game)],
     );
   }
 }
@@ -117,43 +120,66 @@ class ParticipationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ListTile(
-        key: ValueKey(participation.id),
-        title: Text(
-          participation.playerName,
-          style: kBigText,
-        ),
-        subtitle: !participation.isGoing
-            ? Container()
-            : !isEditing
-                ? Text(
-                    participation.faction ?? 'Non assegnato a nessuna fazione')
-                : Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: DropdownButton<String>(
-                        isExpanded: true,
-                        hint: Text('Scegli una fazione'),
-                        value: participation.faction,
-                        items: factions,
-                        onChanged: (value) {
-                          final newParticipation = GameParticipation(
-                            id: participation.id,
-                            gameId: participation.gameId,
-                            gameName: participation.gameName,
-                            playerName: participation.playerName,
-                            playerId: participation.playerId,
-                            isGoing: participation.isGoing,
-                            faction: value,
-                          );
-
-                          Provider.of<GamesProvider>(context, listen: false)
-                              .editParticipation(newParticipation);
-                        }),
-                  ),
-        trailing: ParticipationIcon(participation.isGoing),
+    return ListTile(
+      dense: true,
+      isThreeLine: false,
+      key: ValueKey(participation.id),
+      title: Text(
+        participation.playerName,
+        style: kBigText,
       ),
+      subtitle: !participation.isGoing
+          ? SizedBox()
+          : !isEditing
+              ? Text(participation.faction ?? 'Non assegnato a nessuna fazione')
+              : DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Text('Scegli una fazione'),
+                  value: participation.faction,
+                  items: factions,
+                  onChanged: (value) {
+                    final newParticipation = GameParticipation(
+                      id: participation.id,
+                      gameId: participation.gameId,
+                      gameName: participation.gameName,
+                      playerName: participation.playerName,
+                      playerId: participation.playerId,
+                      isGoing: participation.isGoing,
+                      faction: value,
+                    );
+
+                    Provider.of<GamesProvider>(context, listen: false)
+                        .editParticipation(
+                            newParticipation,
+                            newParticipation.playerId ==
+                                Provider.of<LoginProvider>(context,
+                                        listen: false)
+                                    .loggedPlayer
+                                    .id);
+                  }),
+      trailing: !isEditing
+          ? ParticipationIcon(participation.isGoing)
+          : Switch.adaptive(
+              value: participation.isGoing,
+              onChanged: (value) {
+                final newParticipation = GameParticipation(
+                  id: participation.id,
+                  gameId: participation.gameId,
+                  gameName: participation.gameName,
+                  playerName: participation.playerName,
+                  playerId: participation.playerId,
+                  isGoing: value,
+                  faction: participation.faction,
+                );
+
+                Provider.of<GamesProvider>(context, listen: false)
+                    .editParticipation(
+                        newParticipation,
+                        newParticipation.playerId ==
+                            Provider.of<LoginProvider>(context, listen: false)
+                                .loggedPlayer
+                                .id);
+              }),
     );
   }
 }
@@ -168,6 +194,109 @@ class ParticipationIcon extends StatelessWidget {
     return Icon(
       isGoing ? Icons.check_circle_rounded : Icons.cancel_outlined,
       color: isGoing ? Colors.green : Colors.red,
+      size: 20,
+    );
+  }
+}
+
+class _ModalBottomSheetButton extends StatelessWidget {
+  final Game game;
+  _ModalBottomSheetButton(this.game);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => showModalBottomSheet(
+        context: context,
+        builder: (context) => BottomSheet(
+            onClosing: () {}, builder: (_) => _BottomSheetContent(game)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Hero(
+          tag: 'AddParticipant',
+          child: Text('Aggiungi un ospite'),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomSheetContent extends StatefulWidget {
+  final Game game;
+  _BottomSheetContent(this.game);
+
+  @override
+  __BottomSheetContentState createState() => __BottomSheetContentState();
+}
+
+class __BottomSheetContentState extends State<_BottomSheetContent> {
+  String hostName;
+  bool isLoading = false;
+
+  Future<void> _addHostParticipation() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await Provider.of<GamesProvider>(context, listen: false).editParticipation(
+        GameParticipation(
+            id: null,
+            gameId: widget.game.id,
+            gameName: widget.game.title,
+            playerId: DateTime.now().millisecond.toString(),
+            playerName: hostName,
+            isGoing: true),
+        false);
+
+    setState(() {
+      isLoading = false;
+    });
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ModalProgressHUD(
+      offset: Offset(0, MediaQuery.of(context).viewInsets.bottom),
+      inAsyncCall: isLoading,
+      child: Column(
+        // mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Hero(
+            tag: 'AddParticipant',
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Aggiungi un ospite',
+                style: kTitle,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Nome ospite',
+              ),
+              onChanged: (value) => hostName = value,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _addHostParticipation,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('Conferma'),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+          )
+        ],
+      ),
     );
   }
 }

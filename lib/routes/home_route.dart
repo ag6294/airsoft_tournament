@@ -1,6 +1,6 @@
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
-import 'package:airsoft_tournament/widgets/KPIs/kpibox.dart';
+import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -65,11 +65,11 @@ class _HomeRouteState extends State<HomeRoute> {
             // mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -78,20 +78,22 @@ class _HomeRouteState extends State<HomeRoute> {
                         child: Text(
                           playerNickname,
                           style: kPageTitle,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, bottom: 60),
-                        child: Text(
-                          isGM
-                              ? 'Game Maker dei $teamName'
-                              : 'Associato dei $teamName',
-                          style: kPageSubtitle,
-                        ),
-                      ),
+                      _settingsMenu(context),
                     ],
                   ),
-                  _settingsMenu(context),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 60),
+                    child: Text(
+                      isGM
+                          ? 'Game Maker dei $teamName'
+                          : 'Associato dei $teamName',
+                      overflow: TextOverflow.ellipsis,
+                      style: kPageSubtitle,
+                    ),
+                  ),
                 ],
               ),
               Column(

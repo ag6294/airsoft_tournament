@@ -146,7 +146,7 @@ class __CustomFormState extends State<_CustomForm> {
       child: Form(
         key: _formKey,
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -171,7 +171,7 @@ class __CustomFormState extends State<_CustomForm> {
                 if (isSigningUp)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: NameFormField(updateName),
+                    child: NameFormField(updateName, false),
                   ),
                 if (!isSigningUp)
                   Padding(

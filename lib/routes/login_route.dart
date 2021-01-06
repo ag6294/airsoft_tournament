@@ -103,7 +103,7 @@ class _SignInFormState extends State<SignInForm> {
       child: Form(
         key: _formKey,
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -128,7 +128,7 @@ class _SignInFormState extends State<SignInForm> {
                 if (isSigningUp)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: NameFormField(updateNickname),
+                    child: NameFormField(updateNickname, true),
                   ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),

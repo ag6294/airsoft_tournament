@@ -27,11 +27,17 @@ const TextStyle kSmallText = TextStyle(
 const TextStyle kPageTitle = TextStyle(
     fontSize: 40,
     fontWeight: FontWeight.bold,
-    color: Colors.white70,
+    color: Colors.white,
     letterSpacing: 1.5);
 
 const TextStyle kPageSubtitle = TextStyle(
   fontSize: 24,
   fontWeight: FontWeight.bold,
-  color: Colors.white38,
+  color: Colors.white54,
+);
+
+const TextStyle kFormHint = TextStyle(
+  fontSize: 14,
+  fontWeight: FontWeight.w300,
+  fontStyle: FontStyle.italic,
 );

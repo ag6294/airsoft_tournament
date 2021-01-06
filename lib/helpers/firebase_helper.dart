@@ -71,7 +71,12 @@ class FirebaseHelper {
 
       print('[FirebaseHelper/userSignIn] GET  /players where email : $email');
       final response = await http.get(url);
+
+      print(url);
+
       final decodedResponse = json.decode(response.body);
+
+      print(decodedResponse);
 
       final player = Player.fromMap(
           decodedResponse.keys.first, decodedResponse.values.first);
@@ -111,7 +116,7 @@ class FirebaseHelper {
     var url = endPoint + '/teams/$teamId/players.json?auth=$_authToken';
 
     print(
-        '[FirebaseHelper/userSignUp] PATCH to /players/${loggedPlayer.id} ${loggedPlayer.asMap} ');
+        '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: $teamId ');
 
     await http.patch(url,
         body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
@@ -123,7 +128,7 @@ class FirebaseHelper {
     return Player(
       id: loggedPlayer.id,
       email: loggedPlayer.email,
-      nickname: loggedPlayer.email,
+      nickname: loggedPlayer.nickname,
       teamId: teamId,
       isGM: loggedPlayer.isGM,
     );
@@ -187,17 +192,17 @@ class FirebaseHelper {
     final imageUrl = await ref.getDownloadURL();
 
     final uploadedGame = Game(
-      id: gameId,
-      imageUrl: imageUrl,
-      date: game.date,
-      description: game.description,
-      lastModifiedBy: game.lastModifiedBy,
-      lastModifiedOn: game.lastModifiedOn,
-      place: game.place,
-      title: game.title,
-      hostTeamId: game.hostTeamId,
-      hostTeamName: game.hostTeamName,
-    );
+        id: gameId,
+        imageUrl: imageUrl,
+        date: game.date,
+        description: game.description,
+        lastModifiedBy: game.lastModifiedBy,
+        lastModifiedOn: game.lastModifiedOn,
+        place: game.place,
+        title: game.title,
+        hostTeamId: game.hostTeamId,
+        hostTeamName: game.hostTeamName,
+        attachmentUrl: game.attachmentUrl);
 
     url = endPoint + '/games/$gameId.json?auth=$_authToken';
 
@@ -356,6 +361,7 @@ class FirebaseHelper {
         title: game.title,
         hostTeamId: game.hostTeamId,
         hostTeamName: game.hostTeamName,
+        attachmentUrl: game.attachmentUrl,
       );
 
       await http.patch(url, body: json.encode(uploadedGame.asMap));

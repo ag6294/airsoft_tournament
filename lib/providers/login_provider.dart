@@ -31,12 +31,12 @@ class LoginProvider extends ChangeNotifier {
     print('[LoginProvider/trySignIn] $email - $pwd');
 
     try {
-      _loggedPlayer = await FirebaseHelper.userSignIn(email, pwd);
+      _loggedPlayer = await FirebaseHelper.userSignIn(email.toLowerCase(), pwd);
       if (loggedPlayer.teamId != null)
         _loggedPlayerTeam =
             await FirebaseHelper.getTeamById(loggedPlayer.teamId);
 
-      await SharedPreferencesHelper.storeLoginData(email, pwd);
+      await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
 
       notifyListeners();
     } catch (e) {
@@ -70,8 +70,9 @@ class LoginProvider extends ChangeNotifier {
     print('[LoginProvider/trySignup] $nickname | $email - $pwd');
 
     try {
-      _loggedPlayer = await FirebaseHelper.userSignUp(email, pwd, nickname);
-      await SharedPreferencesHelper.storeLoginData(email, pwd);
+      _loggedPlayer =
+          await FirebaseHelper.userSignUp(email.toLowerCase(), pwd, nickname);
+      await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
       notifyListeners();
     } catch (e) {
       print(e);
@@ -90,7 +91,7 @@ class LoginProvider extends ChangeNotifier {
     _loggedPlayer = Player(
         id: _loggedPlayer.id,
         isGM: true,
-        email: _loggedPlayer.email,
+        email: _loggedPlayer.email.toLowerCase(),
         nickname: _loggedPlayer.nickname,
         teamId: loggedPlayer.teamId);
 
@@ -115,6 +116,7 @@ class LoginProvider extends ChangeNotifier {
     print('[LoginProvider/fetchTeams] starting');
 
     teams = await FirebaseHelper.fetchTeams();
+    teams.sort((a, b) => a.name.compareTo(b.name));
     print(
         '[LoginProvider/fetchTeams] ${teams.map((e) => '|| name: ${e.name}, id: ${e.id}')}');
 

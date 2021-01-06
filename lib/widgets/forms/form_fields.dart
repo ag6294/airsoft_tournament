@@ -78,8 +78,9 @@ class _ConfirmPasswordFormFieldState extends State<ConfirmPasswordFormField> {
 
 class NameFormField extends StatefulWidget {
   final Function onChanged;
+  final bool isPlayerForm;
 
-  const NameFormField(this.onChanged);
+  const NameFormField(this.onChanged, this.isPlayerForm);
 
   @override
   _NameFormFieldState createState() => _NameFormFieldState();
@@ -91,7 +92,7 @@ class _NameFormFieldState extends State<NameFormField> {
     return TextFormField(
       key: Key('name'),
       decoration: InputDecoration(
-        labelText: 'Nome',
+        labelText: widget.isPlayerForm ? 'Nickname' : 'Nome Team',
       ),
       validator: (value) => FormHelper.validateNickname(value),
       // autovalidateMode: AutovalidateMode.onUserInteraction,
