@@ -16,14 +16,20 @@ class GamesProvider extends ChangeNotifier {
   List<Game> get games => _games;
   List<GameParticipation> get loggedUserParticipations =>
       _loggedUserParticipations;
-  List<GameParticipation> get gameParticipations => _gameParticipations
-    ..sort((a, b) {
-      if (a.isGoing && !b.isGoing) return -1;
-      if (!a.isGoing && b.isGoing) return 1;
-      if (a.faction == null) return -1;
-      if (b.faction == null) return 1;
-      return a.faction.compareTo(b.faction);
-    });
+  List<GameParticipation> get gameParticipations => _gameParticipations;
+
+  void sortParticipations() {
+    _gameParticipations
+      ..sort((a, b) {
+        if (a.isGoing && !b.isGoing) return -1;
+        if (!a.isGoing && b.isGoing) return 1;
+        if (a.faction == null) return -1;
+        if (b.faction == null) return 1;
+        return a.faction.compareTo(b.faction);
+      });
+
+    notifyListeners();
+  }
 
   Future<Game> addNewGame(Game newGame) async {
     print('[GameProvider/addNewGame] title: ${newGame.title}');
@@ -71,6 +77,7 @@ class GamesProvider extends ChangeNotifier {
         '[GameProvider/fetchAndSetGameParticipations] starting for teamId : $gameId');
 
     _gameParticipations = await FirebaseHelper.fetchGameParticipations(gameId);
+    sortParticipations();
 
     notifyListeners();
   }
@@ -80,15 +87,18 @@ class GamesProvider extends ChangeNotifier {
     print(
         '[GameProvider/editParticipation] starting for userId : ${participation.id} and gameId : ${participation.gameId}');
     if (participation.id != null) {
+      final index = _gameParticipations
+          .indexWhere((element) => element.id == participation.id);
+
       _loggedUserParticipations
           .removeWhere((element) => element.id == participation.id);
-      _gameParticipations
-          .removeWhere((element) => element.id == participation.id);
+      //_gameParticipations must stay sorted to allow the user to easily decide factions
+      _gameParticipations.removeAt(index);
 
       final newParticipation =
           await FirebaseHelper.editParticipation(participation);
       _loggedUserParticipations.add(newParticipation);
-      _gameParticipations.add(newParticipation);
+      _gameParticipations.insert(index, newParticipation);
     } else {
       final newParticipation =
           await FirebaseHelper.addNewParticipation(participation);

@@ -72,26 +72,12 @@ class GameCover extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverAppBar(
       actions: [MenuPopUp(game, editCallBack)],
-      floating: true,
-      flexibleSpace: Hero(
-        tag: game.id,
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(24),
-            bottomRight: Radius.circular(24),
-          ),
-          child: Image.network(
-            game.imageUrl,
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-      expandedHeight: MediaQuery.of(context).size.width,
       pinned: true,
-      elevation: 0,
+      floating: true,
       bottom: PreferredSize(
+        preferredSize: Size(MediaQuery.of(context).size.width, 56),
         child: Container(
-          height: 56,
+          // height: 56,
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.5),
@@ -103,7 +89,7 @@ class GameCover extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.bottomLeft,
               child: Text(
                 game.title,
                 style: kCardTitle,
@@ -113,8 +99,24 @@ class GameCover extends StatelessWidget {
             ),
           ),
         ),
-        preferredSize: Size.fromHeight(56),
       ),
+      forceElevated: true,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ),
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            image: NetworkImage(
+              game.imageUrl,
+            ),
+          ),
+        ),
+      ),
+      expandedHeight: MediaQuery.of(context).size.width,
+      elevation: 0,
     );
   }
 }
@@ -130,6 +132,16 @@ class GameDetails extends StatelessWidget {
         [
           TitleAndInfo('Data e Luogo',
               '${DateFormat('dd/MM/yyyy').format(game.date)}\n${game.place}'),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
+          TitleAndInfo('Descrizione', game.description),
           TitleAndInfo('Descrizione', game.description),
         ],
       ),
@@ -353,3 +365,51 @@ void _openAttachment(String url) async {
     throw 'Could not launch $url';
   }
 }
+
+//
+// return SliverAppBar(
+// actions: [MenuPopUp(game, editCallBack)],
+// floating: true,
+// flexibleSpace: Hero(
+// tag: game.id,
+// child: ClipRRect(
+// borderRadius: BorderRadius.only(
+// bottomLeft: Radius.circular(24),
+// bottomRight: Radius.circular(24),
+// ),
+// child: Image.network(
+// game.imageUrl,
+// fit: BoxFit.cover,
+// ),
+// ),
+// ),
+// // expandedHeight: MediaQuery.of(context).size.width,
+// pinned: true,
+// elevation: 0,
+// bottom: PreferredSize(
+// child: Container(
+// // height: 56,
+// // width: MediaQuery.of(context).size.width,
+// decoration: BoxDecoration(
+// color: Colors.black.withOpacity(0.5),
+// borderRadius: BorderRadius.only(
+// bottomLeft: Radius.circular(24),
+// bottomRight: Radius.circular(24),
+// ),
+// ),
+// child: Padding(
+// padding: const EdgeInsets.all(8.0),
+// child: Align(
+// alignment: Alignment.centerLeft,
+// child: Text(
+// game.title,
+// style: kCardTitle,
+// maxLines: 1,
+// overflow: TextOverflow.ellipsis,
+// ),
+// ),
+// ),
+// ),
+// preferredSize: Size.fromHeight(56),
+// ),
+// );

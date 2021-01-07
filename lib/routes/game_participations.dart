@@ -30,6 +30,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
     super.didChangeDependencies();
     game = ModalRoute.of(context).settings.arguments;
     isGM = Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM;
+    //TODO Add padding to DropdownMenuItem
     factionsButtons = factions
         .map((e) => DropdownMenuItem(
               value: e,
@@ -44,10 +45,12 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       appBar: AppBar(
         title: Text('Presenze'),
         actions: [
-          if (game.date.isAfter(DateTime.now()))
+          if (game.date.isAfter(DateTime.now()) && isGM)
             IconButton(
                 icon: !isEditing ? Icon(Icons.edit) : Icon(Icons.edit_off),
                 onPressed: () {
+                  Provider.of<GamesProvider>(context, listen: false)
+                      .sortParticipations();
                   setState(() {
                     isEditing = !isEditing;
                   });
@@ -55,9 +58,10 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async =>
-            Provider.of<GamesProvider>(context, listen: false)
-                .fetchAndSetGameParticipations(game.id),
+        onRefresh: () async {
+          Provider.of<GamesProvider>(context, listen: false)
+              .fetchAndSetGameParticipations(game.id);
+        },
         child: Consumer<GamesProvider>(builder: (context, gameProvider, _) {
           final List<GameParticipation> participations =
               gameProvider.gameParticipations;
@@ -96,17 +100,20 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
                 ),
               ),
               Divider(),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: participations.length,
-                itemBuilder: (context, index) => ParticipationCard(
-                    participations[index], isEditing, factionsButtons),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: participations.length,
+                  itemBuilder: (context, index) => ParticipationCard(
+                      participations[index], isEditing, factionsButtons),
+                ),
               ),
             ],
           );
         }),
       ),
-      persistentFooterButtons: [_ModalBottomSheetButton(game)],
+      persistentFooterButtons:
+          isGM && !isEditing ? [_ModalBottomSheetButton(game)] : null,
     );
   }
 }
@@ -259,7 +266,7 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
   @override
   Widget build(BuildContext context) {
     return ModalProgressHUD(
-      offset: Offset(0, MediaQuery.of(context).viewInsets.bottom),
+      offset: Offset(MediaQuery.of(context).size.width / 2, 100),
       inAsyncCall: isLoading,
       child: Column(
         // mainAxisSize: MainAxisSize.min,
