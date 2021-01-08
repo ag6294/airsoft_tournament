@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 class EmailFormField extends StatefulWidget {
   final Function onChanged;
+  final List<String> autofillHints;
 
-  const EmailFormField(this.onChanged);
+  const EmailFormField(this.onChanged, this.autofillHints);
 
   @override
   _EmailFormFieldState createState() => _EmailFormFieldState();
@@ -21,6 +22,7 @@ class _EmailFormFieldState extends State<EmailFormField> {
       validator: (value) => FormHelper.validateEmail(value),
       // autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: widget.onChanged,
+      autofillHints: widget.autofillHints,
     );
   }
 }
@@ -28,8 +30,9 @@ class _EmailFormFieldState extends State<EmailFormField> {
 class PasswordFormField extends StatefulWidget {
   final Function onChanged;
   final String teamPwd;
+  final List<String> autofillHints;
 
-  const PasswordFormField(this.onChanged, [this.teamPwd]);
+  const PasswordFormField(this.onChanged, this.autofillHints, {this.teamPwd});
   @override
   _PasswordFormFieldState createState() => _PasswordFormFieldState();
 }
@@ -46,6 +49,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
       validator: (value) => FormHelper.validatePassword(value, widget.teamPwd),
       // autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: widget.onChanged,
+      autofillHints: widget.autofillHints,
     );
   }
 }

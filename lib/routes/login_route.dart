@@ -100,103 +100,108 @@ class _SignInFormState extends State<SignInForm> {
       inAsyncCall: isLoading,
       child: Form(
         key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, top: 60, bottom: 8),
-                  child: Text(
-                    isSigningUp ? 'Benvenuto,' : 'Bentornato,',
-                    style: kPageTitle,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 100),
-                  child: Text(
-                    isSigningUp
-                        ? 'Iscriviti per continuare!'
-                        : 'Fai login per continuare!',
-                    style: kPageSubtitle,
-                  ),
-                ),
-                if (isSigningUp)
+        child: AutofillGroup(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: NameFormField(updateNickname, true),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: EmailFormField(updateEmail),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: PasswordFormField(updatePwd1),
-                ),
-                if (isSigningUp)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ConfirmPasswordFormField(updatePwd2, password1),
-                  ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () => setState(() {
-                        isSigningUp = !isSigningUp;
-                      }),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(isSigningUp
-                            ? 'Sei già registrato?'
-                            : 'Non sei ancora registrato?'),
-                      ),
+                    padding:
+                        const EdgeInsets.only(left: 8.0, top: 60, bottom: 8),
+                    child: Text(
+                      isSigningUp ? 'Benvenuto,' : 'Bentornato,',
+                      style: kPageTitle,
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: 8.0,
-                    right: 8.0,
-                    top: 20.0,
                   ),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState.validate()) {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        try {
-                          isSigningUp
-                              ? await Provider.of<LoginProvider>(context,
-                                      listen: false)
-                                  .trySignUp(email, password1, nickname)
-                              : await Provider.of<LoginProvider>(context,
-                                      listen: false)
-                                  .trySignIn(email, password1);
-                        } catch (e) {
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 100),
+                    child: Text(
+                      isSigningUp
+                          ? 'Iscriviti per continuare!'
+                          : 'Fai login per continuare!',
+                      style: kPageSubtitle,
+                    ),
+                  ),
+                  if (isSigningUp)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: NameFormField(updateNickname, true),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: EmailFormField(
+                        updateEmail, <String>[AutofillHints.email]),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: PasswordFormField(
+                        updatePwd1, <String>[AutofillHints.password]),
+                  ),
+                  if (isSigningUp)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ConfirmPasswordFormField(updatePwd2, password1),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          isSigningUp = !isSigningUp;
+                        }),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(isSigningUp
+                              ? 'Sei già registrato?'
+                              : 'Non sei ancora registrato?'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: 8.0,
+                      right: 8.0,
+                      top: 20.0,
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState.validate()) {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          try {
+                            isSigningUp
+                                ? await Provider.of<LoginProvider>(context,
+                                        listen: false)
+                                    .trySignUp(email, password1, nickname)
+                                : await Provider.of<LoginProvider>(context,
+                                        listen: false)
+                                    .trySignIn(email, password1);
+                          } catch (e) {
+                            setState(() {
+                              isLoading = false;
+                            });
+                            _showDialog(e.toString());
+                          }
                           setState(() {
                             isLoading = false;
                           });
-                          _showDialog(e.toString());
                         }
-                        setState(() {
-                          isLoading = false;
-                        });
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Text(
-                        isSigningUp ? 'Registrati' : 'Login',
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Text(
+                          isSigningUp ? 'Registrati' : 'Login',
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

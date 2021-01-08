@@ -41,6 +41,8 @@ class FirebaseHelper {
       final playerId = json.decode(response.body)['name'];
 
       url = endPoint + '/players/$playerId.json?auth=$_authToken';
+      print(
+          '[FirebaseHelper/userSignUp] PATCH to /players, body = ${playerTemp.asMap}');
       await http.patch(url, body: json.encode({'id': playerId}));
 
       return Player(
@@ -162,6 +164,7 @@ class FirebaseHelper {
       final _authToken = await _auth.currentUser.getIdToken();
       final url = endPoint + '/teams/$id.json?auth=$_authToken';
 
+      print('[FirebaseHelper/getTeamById] GET /teams, id: $id');
       final response = await http.get(url);
       Map<String, dynamic> decodedResponse = json.decode(response.body);
 

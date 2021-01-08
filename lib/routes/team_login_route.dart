@@ -180,7 +180,8 @@ class __CustomFormState extends State<_CustomForm> {
                   ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: PasswordFormField(updatePwd1, team?.password),
+                  child: PasswordFormField(updatePwd1, [],
+                      teamPwd: team?.password),
                 ),
                 if (isSigningUp)
                   Padding(
@@ -212,6 +213,7 @@ class __CustomFormState extends State<_CustomForm> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState.validate()) {
+                        _formKey.currentState.save();
                         setState(() {
                           _isLoading = true;
                         });
