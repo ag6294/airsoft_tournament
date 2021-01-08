@@ -2,7 +2,6 @@ import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
-import './login_provider.dart';
 
 class GamesProvider extends ChangeNotifier {
   List<Game> _games = [];

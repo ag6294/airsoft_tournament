@@ -8,8 +8,6 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/models/game.dart';
-import 'dart:convert';
-import 'dart:io';
 import 'package:intl/intl.dart';
 
 class GamesRoute extends StatefulWidget {

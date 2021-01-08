@@ -5,7 +5,6 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
 
 import 'package:airsoft_tournament/models/game_participation.dart';
-import 'package:airsoft_tournament/routes/games_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

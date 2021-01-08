@@ -7,7 +7,6 @@ import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -107,7 +106,11 @@ class FirebaseHelper {
     print(
         '[FirebaseHelper/userSignUp] POST to /teams resolved in ${response.body}');
 
-    return Team(id: json.decode(response.body)['name'], name: name);
+    return Team(
+        id: json.decode(response.body)['name'],
+        name: name,
+        players: [],
+        password: password);
   }
 
   static Future<Player> addCurrentPlayerToTeam(
@@ -374,7 +377,7 @@ class FirebaseHelper {
   }
 
   static Future<void> removeFile(String url) async {
-    print('[FirebaseHelper/removeFile] Removing file from storage : ${url}');
+    print('[FirebaseHelper/removeFile] Removing file from storage : $url');
     await _store.refFromURL(url).delete();
   }
 

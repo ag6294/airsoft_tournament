@@ -1,5 +1,3 @@
-import 'dart:wasm';
-
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/widgets/forms/form_fields.dart';

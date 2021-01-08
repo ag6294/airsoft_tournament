@@ -1,11 +1,11 @@
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
+import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
-import 'package:airsoft_tournament/widgets/box_and_texts//kpibox.dart';
+import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 
@@ -22,8 +22,12 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   bool isEditing = false;
   Game game;
 
+  List<GameParticipation> participations = [];
+  List<Player> playerNotReplied = [];
+
   final factions = ['Alpha', 'Bravo', 'Charlie'];
   List<DropdownMenuItem> factionsButtons;
+  List<KPIBox> factionsBoxes;
 
   @override
   void didChangeDependencies() {
@@ -35,6 +39,21 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
         .map((e) => DropdownMenuItem(
               value: e,
               child: Text(e),
+            ))
+        .toList();
+
+    playerNotReplied = Provider.of<LoginProvider>(context, listen: false)
+        .loggedPlayerTeam
+        .players;
+
+    factionsBoxes = factions
+        .map((e) => KPIBox(
+              label: e,
+              value: participations
+                  .where((element) =>
+                      element.isGoing && element.faction?.compareTo(e) == 0)
+                  .length
+                  .toString(),
             ))
         .toList();
   }
@@ -63,17 +82,12 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
               .fetchAndSetGameParticipations(game.id);
         },
         child: Consumer<GamesProvider>(builder: (context, gameProvider, _) {
-          final List<GameParticipation> participations =
-              gameProvider.gameParticipations;
+          participations = gameProvider.gameParticipations;
 
-          final factionsBoxes = factions.map((e) => KPIBox(
-                label: e,
-                value: participations
-                    .where((element) =>
-                        element.isGoing && element.faction?.compareTo(e) == 0)
-                    .length
-                    .toString(),
-              ));
+          for (GameParticipation p in participations) {
+            playerNotReplied
+                .removeWhere((player) => player.id.compareTo(p.playerId) == 0);
+          }
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -95,6 +109,10 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
                           '${participations.where((element) => !element.isGoing).length}',
                       label: 'Assenti',
                     ),
+                    KPIBox(
+                      value: '${playerNotReplied.length}',
+                      label: 'In dubbio',
+                    ),
                     ...factionsBoxes,
                   ],
                 ),
@@ -103,9 +121,12 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
               Expanded(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: participations.length,
-                  itemBuilder: (context, index) => ParticipationCard(
-                      participations[index], isEditing, factionsButtons),
+                  itemCount: participations.length + playerNotReplied.length,
+                  itemBuilder: (context, index) => index < participations.length
+                      ? ParticipationCard(
+                          participations[index], isEditing, factionsButtons)
+                      : PlayerNotRepliedCard(
+                          playerNotReplied[index - participations.length]),
                 ),
               ),
             ],
@@ -304,6 +325,26 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
           )
         ],
       ),
+    );
+  }
+}
+
+class PlayerNotRepliedCard extends StatelessWidget {
+  final Player player;
+
+  const PlayerNotRepliedCard(this.player);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      isThreeLine: false,
+      key: ValueKey(player.id),
+      title: Text(
+        player.nickname,
+        style: kBigText,
+      ),
+      subtitle: Text('Non ha ancora risposto'),
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 import 'package:airsoft_tournament/routes/games_route.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
