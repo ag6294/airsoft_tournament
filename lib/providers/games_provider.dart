@@ -81,8 +81,8 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> editParticipation(
-      GameParticipation participation, bool isLoggedUserParticipation) async {
+  void editParticipation(
+      GameParticipation participation, bool isLoggedUserParticipation) {
     print(
         '[GameProvider/editParticipation] starting for userId : ${participation.id} and gameId : ${participation.gameId}');
     if (participation.id != null) {
@@ -91,22 +91,28 @@ class GamesProvider extends ChangeNotifier {
 
       _loggedUserParticipations
           .removeWhere((element) => element.id == participation.id);
+      _loggedUserParticipations.add(participation);
       //_gameParticipations must stay sorted to allow the user to easily decide factions
       _gameParticipations.removeAt(index);
+      _gameParticipations.insert(index, participation);
 
-      final newParticipation =
-          await FirebaseHelper.editParticipation(participation);
-      _loggedUserParticipations.add(newParticipation);
-      _gameParticipations.insert(index, newParticipation);
+      notifyListeners();
+
+      FirebaseHelper.editParticipation(participation);
     } else {
-      final newParticipation =
-          await FirebaseHelper.addNewParticipation(participation);
-      if (isLoggedUserParticipation)
-        _loggedUserParticipations.add(newParticipation);
-      _gameParticipations.add(newParticipation);
-    }
+      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+      final tempParticipation =
+          GameParticipation.fromMap(tempId, participation.asMap);
+      _gameParticipations.add(tempParticipation);
+      notifyListeners();
 
-    notifyListeners();
+      FirebaseHelper.addNewParticipation(participation).then((value) {
+        _gameParticipations.removeWhere((gp) => gp.id == tempId);
+        _gameParticipations.add(participation);
+        if (isLoggedUserParticipation) _loggedUserParticipations.add(value);
+        notifyListeners();
+      });
+    }
   }
 
   Future<void> deleteGame(Game game) async {
