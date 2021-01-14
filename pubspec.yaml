@@ -37,7 +37,7 @@ dependencies:
   image_picker: ^0.6.7+14
   shared_preferences: ^0.5.12+4
   url_launcher: ^5.7.10
-  shared_preferences_web: ^0.1.0
+
 
 dev_dependencies:
   flutter_test:

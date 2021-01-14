@@ -46,6 +46,10 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
         .loggedPlayerTeam
         .players;
 
+    _refreshFactionKPIs();
+  }
+
+  void _refreshFactionKPIs() {
     factionsBoxes = factions
         .map((e) => KPIBox(
               label: e,
@@ -88,6 +92,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
             playerNotReplied
                 .removeWhere((player) => player.id.compareTo(p.playerId) == 0);
           }
+          _refreshFactionKPIs();
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -157,7 +162,7 @@ class ParticipationCard extends StatelessWidget {
         style: kBigText,
       ),
       subtitle: !participation.isGoing
-          ? SizedBox()
+          ? Text('Assente')
           : !isEditing
               ? Text(participation.faction ?? 'Non assegnato a nessuna fazione')
               : DropdownButton<String>(
@@ -223,6 +228,26 @@ class ParticipationIcon extends StatelessWidget {
       isGoing ? Icons.check_circle_rounded : Icons.cancel_outlined,
       color: isGoing ? Colors.green : Colors.red,
       size: 20,
+    );
+  }
+}
+
+class PlayerNotRepliedCard extends StatelessWidget {
+  final Player player;
+
+  const PlayerNotRepliedCard(this.player);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      isThreeLine: false,
+      key: ValueKey(player.id),
+      title: Text(
+        player.nickname,
+        style: kBigText,
+      ),
+      subtitle: Text('Non ha ancora risposto'),
     );
   }
 }
@@ -325,26 +350,6 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
           )
         ],
       ),
-    );
-  }
-}
-
-class PlayerNotRepliedCard extends StatelessWidget {
-  final Player player;
-
-  const PlayerNotRepliedCard(this.player);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      isThreeLine: false,
-      key: ValueKey(player.id),
-      title: Text(
-        player.nickname,
-        style: kBigText,
-      ),
-      subtitle: Text('Non ha ancora risposto'),
     );
   }
 }

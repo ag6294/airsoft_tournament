@@ -89,9 +89,12 @@ class GamesProvider extends ChangeNotifier {
       final index = _gameParticipations
           .indexWhere((element) => element.id == participation.id);
 
-      _loggedUserParticipations
-          .removeWhere((element) => element.id == participation.id);
-      _loggedUserParticipations.add(participation);
+      if (isLoggedUserParticipation)
+        _loggedUserParticipations
+            .removeWhere((element) => element.id == participation.id);
+      if (isLoggedUserParticipation)
+        _loggedUserParticipations.add(participation);
+
       //_gameParticipations must stay sorted to allow the user to easily decide factions
       _gameParticipations.removeAt(index);
       _gameParticipations.insert(index, participation);
@@ -104,11 +107,13 @@ class GamesProvider extends ChangeNotifier {
       final tempParticipation =
           GameParticipation.fromMap(tempId, participation.asMap);
       _gameParticipations.add(tempParticipation);
+      if (isLoggedUserParticipation)
+        _loggedUserParticipations.add(tempParticipation);
       notifyListeners();
 
       FirebaseHelper.addNewParticipation(participation).then((value) {
         _gameParticipations.removeWhere((gp) => gp.id == tempId);
-        _gameParticipations.add(participation);
+        _gameParticipations.insert(0, participation);
         if (isLoggedUserParticipation) _loggedUserParticipations.add(value);
         notifyListeners();
       });

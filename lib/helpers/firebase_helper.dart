@@ -283,7 +283,7 @@ class FirebaseHelper {
         endPoint + '/participations/${participation.id}.json?auth=$_authToken';
 
     print(
-        '[FirebaseHelper/editParticipation] POST to /participations, body = ${participation.asMap}');
+        '[FirebaseHelper/editParticipation] PATCH to /participations, body = ${participation.asMap}');
 
     await http.patch(url, body: json.encode(participation.asMap));
 

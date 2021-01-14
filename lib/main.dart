@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<LoginProvider>(
         builder: (context, authProvider, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData.dark().copyWith(
             appBarTheme: AppBarTheme().copyWith(
