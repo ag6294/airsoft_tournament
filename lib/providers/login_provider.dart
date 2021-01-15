@@ -25,24 +25,32 @@ class LoginProvider extends ChangeNotifier {
 
   Player get loggedPlayer => _loggedPlayer;
 
-  Team get loggedPlayerTeam => _loggedPlayerTeam;
+  Team get loggedPlayerTeam {
+    print('loggedPlayerTeam = ${_loggedPlayerTeam.asMap}');
+    return _loggedPlayerTeam;
+  }
 
   Future<void> trySignIn(String email, String pwd) async {
     print('[LoginProvider/trySignIn] $email - $pwd');
 
     try {
       _loggedPlayer = await FirebaseHelper.userSignIn(email.toLowerCase(), pwd);
-      if (loggedPlayer.teamId != null)
-        _loggedPlayerTeam =
-            await FirebaseHelper.getTeamById(loggedPlayer.teamId);
-
       await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
-
-      notifyListeners();
+      await getAndSetLoggedPlayerTeam();
     } catch (e) {
       print(e);
       throw e;
     }
+  }
+
+  Future<void> getAndSetLoggedPlayerTeam() async {
+    print(
+        '[LoginProvider/getAndSetLoggedPlayerTeam] get team ${_loggedPlayer.teamId}');
+    if (loggedPlayer.teamId != null)
+      _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
+    print(
+        '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
+    notifyListeners();
   }
 
   Future<void> tryAutoSignIn() async {
@@ -109,17 +117,5 @@ class LoginProvider extends ChangeNotifier {
         await FirebaseHelper.addCurrentPlayerToTeam(teamId, loggedPlayer);
     _loggedPlayerTeam = await FirebaseHelper.getTeamById(teamId);
     notifyListeners();
-  }
-
-  Future<List<Team>> fetchTeams() async {
-    List<Team> teams = [];
-    print('[LoginProvider/fetchTeams] starting');
-
-    teams = await FirebaseHelper.fetchTeams();
-    teams.sort((a, b) => a.name.compareTo(b.name));
-    print(
-        '[LoginProvider/fetchTeams] ${teams.map((e) => '|| name: ${e.name}, id: ${e.id}')}');
-
-    return teams;
   }
 }

@@ -115,6 +115,49 @@ class FirebaseHelper {
         password: password);
   }
 
+  static Future<Team> editTeam(Team team, String oldImageUrl) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/teams/${team.id}.json?auth=$_authToken';
+    String imageUrl;
+
+    try {
+      if (team.imageUrl != null &&
+          team.imageUrl != '' &&
+          !isNetworkImage(team.imageUrl)) {
+        removeFile(oldImageUrl);
+
+        final imageFile = File(team.imageUrl);
+        final ref = _store
+            .ref()
+            .child('team_images')
+            .child(team.id + ph.extension(imageFile.path));
+
+        await ref.putFile(imageFile);
+        imageUrl = await ref.getDownloadURL();
+      } else
+        imageUrl = team.imageUrl;
+
+      print('[FirebaseHelper/editTeam] PATCH to /teams, id : ${team.id}');
+
+      final uploadedTeam = Team(
+        id: team.id,
+        imageUrl: imageUrl,
+        description: team.description,
+        name: team.name,
+        players: team.players,
+        password: team.password,
+        contacts: team.contacts,
+      );
+
+      await http.patch(url, body: json.encode(uploadedTeam.asMap));
+
+      return uploadedTeam;
+    } catch (e) {
+      imageUrl = team.imageUrl;
+      throw (e);
+    }
+  }
+
   static Future<Player> addCurrentPlayerToTeam(
       String teamId, Player loggedPlayer) async {
     final _authToken = await _auth.currentUser.getIdToken();
@@ -385,6 +428,6 @@ class FirebaseHelper {
   }
 
   static bool isNetworkImage(String url) {
-    return url.contains('firebasestorage');
+    return url == null ? false : url.contains('firebasestorage');
   }
 }

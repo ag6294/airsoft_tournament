@@ -1,5 +1,7 @@
 import 'package:airsoft_tournament/constants/style.dart';
+import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
+import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +20,7 @@ class HomeRoute extends StatefulWidget {
 class _HomeRouteState extends State<HomeRoute> {
   String playerId;
   String playerNickname;
-  String teamName;
+  Team team;
   bool isGM;
   List<GameParticipation> playerParticipations = [];
 
@@ -37,24 +39,22 @@ class _HomeRouteState extends State<HomeRoute> {
       context,
       listen: false,
     ).loggedPlayer.isGM;
-    teamName = Provider.of<LoginProvider>(
-      context,
-      listen: false,
-    ).loggedPlayerTeam.name;
-    Provider.of<GamesProvider>(context, listen: false)
-        .fetchAndSetLoggedUserParticipations(playerId);
-  }
 
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-    playerParticipations =
-        Provider.of<GamesProvider>(context).loggedUserParticipations;
+    @override
+    void didChangeDependencies() {
+      super.didChangeDependencies();
+      playerParticipations =
+          Provider.of<GamesProvider>(context).loggedUserParticipations;
+
+      team = Provider.of<LoginProvider>(context).loggedPlayerTeam;
+      Provider.of<GamesProvider>(context)
+          .fetchAndSetLoggedUserParticipations(playerId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    team = Provider.of<LoginProvider>(context, listen: false).loggedPlayerTeam;
     return Scaffold(
       body: WillPopScope(
         onWillPop: () {},
@@ -85,12 +85,17 @@ class _HomeRouteState extends State<HomeRoute> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 60),
-                    child: Text(
-                      isGM
-                          ? 'Game Maker dei $teamName'
-                          : 'Associato dei $teamName',
-                      overflow: TextOverflow.ellipsis,
-                      style: kPageSubtitle,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pushNamed(
+                          TeamDetailRoute.routeName,
+                          arguments: team),
+                      child: Text(
+                        isGM
+                            ? 'Game Maker dei ${team?.name}'
+                            : 'Associato dei ${team?.name}',
+                        overflow: TextOverflow.ellipsis,
+                        style: kPageSubtitle,
+                      ),
                     ),
                   ),
                 ],
