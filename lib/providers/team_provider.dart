@@ -20,4 +20,10 @@ class TeamsProvider extends ChangeNotifier {
 
     await FirebaseHelper.editTeam(team, oldImageUrl);
   }
+
+  Future<Team> getTeamById(String id) async {
+    print('[TeamProvider/getTeamById] get team $id}');
+
+    return await FirebaseHelper.getTeamById(id);
+  }
 }

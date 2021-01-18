@@ -45,7 +45,7 @@ class GamesProvider extends ChangeNotifier {
   Future<void> fetchAndSetGames(String teamId, bool forceRefresh) async {
     print('[GameProvider/fetchAndSetGames] starting');
     if (_games.isEmpty || forceRefresh) {
-      _games = await FirebaseHelper.fetchGames(teamId);
+      _games = await FirebaseHelper.fetchFutureGames();
       _games.sort((a, b) => b.date.compareTo(a.date));
       print('[GameProvider/fetchAndSetGames] ending');
 

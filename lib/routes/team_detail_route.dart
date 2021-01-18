@@ -117,7 +117,14 @@ class MenuPopUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itemsList = [
-      if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+      if (Provider.of<LoginProvider>(context, listen: false)
+              .loggedPlayer
+              .isGM &&
+          Provider.of<LoginProvider>(context, listen: false)
+                  .loggedPlayerTeam
+                  .id
+                  .compareTo(team.id) ==
+              0)
         PopupMenuItem(
           value: () => Navigator.of(context)
               .pushNamed(TeamEditRoute.routeName, arguments: team)

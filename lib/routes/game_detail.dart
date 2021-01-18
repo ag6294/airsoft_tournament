@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
+import 'team_detail_route.dart';
 
 import 'package:airsoft_tournament/models/game_participation.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,10 +12,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
+import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/routes/game_participations.dart';
 
 import 'package:airsoft_tournament/widgets/box_and_texts/detail_routes_elements.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 import 'edit_game_route.dart';
 
@@ -159,11 +162,12 @@ class GameParticipations extends StatelessWidget {
             ? gameParticipations.where((p) => p.playerId == player.id).first
             : null;
         final isGoing = hasReplied ? playerParticipation.isGoing : false;
+        final isMyTeamGame = player.teamId.compareTo(game.hostTeamId) == 0;
 
         return SliverList(
           delegate: SliverChildListDelegate(
             [
-              if (!DateTime.now().isAfter(game.date))
+              if (!DateTime.now().isAfter(game.date) && isMyTeamGame)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -239,7 +243,13 @@ class GameParticipations extends StatelessWidget {
                     // ),
                   ],
                 ),
-              if (DateTime.now().isAfter(game.date))
+              if (!DateTime.now().isAfter(game.date) && !isMyTeamGame)
+                Row(
+                  children: [
+                    TeamPageButton(game),
+                  ],
+                ),
+              if (DateTime.now().isAfter(game.date) && isMyTeamGame)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -251,6 +261,21 @@ class GameParticipations extends StatelessWidget {
                             : isGoing
                                 ? 'Hai partecipato a questa giocata'
                                 : 'Non hai partecipato a questa giocata',
+                        style: kMediumText,
+                      ),
+                    ),
+                    // Text(
+                    //     'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
+                  ],
+                ),
+              if (DateTime.now().isAfter(game.date) && !isMyTeamGame)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'La giocata è scaduta',
                         style: kMediumText,
                       ),
                     ),
@@ -355,50 +380,53 @@ void _openAttachment(String url) async {
   }
 }
 
-//
-// return SliverAppBar(
-// actions: [MenuPopUp(game, editCallBack)],
-// floating: true,
-// flexibleSpace: Hero(
-// tag: game.id,
-// child: ClipRRect(
-// borderRadius: BorderRadius.only(
-// bottomLeft: Radius.circular(24),
-// bottomRight: Radius.circular(24),
-// ),
-// child: Image.network(
-// game.imageUrl,
-// fit: BoxFit.cover,
-// ),
-// ),
-// ),
-// // expandedHeight: MediaQuery.of(context).size.width,
-// pinned: true,
-// elevation: 0,
-// bottom: PreferredSize(
-// child: Container(
-// // height: 56,
-// // width: MediaQuery.of(context).size.width,
-// decoration: BoxDecoration(
-// color: Colors.black.withOpacity(0.5),
-// borderRadius: BorderRadius.only(
-// bottomLeft: Radius.circular(24),
-// bottomRight: Radius.circular(24),
-// ),
-// ),
-// child: Padding(
-// padding: const EdgeInsets.all(8.0),
-// child: Align(
-// alignment: Alignment.centerLeft,
-// child: Text(
-// game.title,
-// style: kCardTitle,
-// maxLines: 1,
-// overflow: TextOverflow.ellipsis,
-// ),
-// ),
-// ),
-// ),
-// preferredSize: Size.fromHeight(56),
-// ),
-// );
+class TeamPageButton extends StatefulWidget {
+  final Game game;
+
+  TeamPageButton(this.game);
+
+  @override
+  _TeamPageButtonState createState() => _TeamPageButtonState();
+}
+
+class _TeamPageButtonState extends State<TeamPageButton> {
+  var isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          onPressed: isLoading
+              ? null
+              : () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+
+                  var hostTeam =
+                      await Provider.of<TeamsProvider>(context, listen: false)
+                          .getTeamById(widget.game.hostTeamId);
+
+                  setState(() {
+                    isLoading = false;
+                  });
+
+                  Navigator.pushNamed(context, TeamDetailRoute.routeName,
+                      arguments: hostTeam);
+                },
+          child: isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text('Contatta i ${widget.game.hostTeamName}'),
+        ),
+      ),
+    );
+  }
+}

@@ -264,17 +264,36 @@ class FirebaseHelper {
     return uploadedGame;
   }
 
-  static Future<List<Game>> fetchGames(String teamId) async {
+  static Future<List<Game>> fetchGamesForTeam(String teamId) async {
     final _authToken = await _auth.currentUser.getIdToken();
     final url = endPoint +
         '/games.json?orderBy="hostTeamId"&equalTo="$teamId"&auth=$_authToken';
 
-    print('[FirebaseHelper/fetchTeams] GET  /games where hostTeamId : $teamId');
+    print(
+        '[FirebaseHelper/fetchGamesForTeam] GET  /games where hostTeamId : $teamId');
 
     final response = await http.get(url);
     Map<String, dynamic> map = json.decode(response.body);
 
-    print('[FirebaseHelper/fetchTeams] GET  /games resolved to $map');
+    print('[FirebaseHelper/fetchGamesForTeam] GET  /games resolved to $map');
+
+    return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
+  }
+
+  static Future<List<Game>> fetchFutureGames() async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final dataString =
+        DateTime.now().subtract(Duration(days: 7)).toIso8601String();
+    final url = endPoint +
+        '/games.json?orderBy="date"&start at="$dataString"&auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/fetchFutureGames] GET  /games where date < $dataString - 7 days');
+
+    final response = await http.get(url);
+    Map<String, dynamic> map = json.decode(response.body);
+
+    print('[FirebaseHelper/fetchFutureGames] GET  /games resolved to $map');
 
     return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
   }
