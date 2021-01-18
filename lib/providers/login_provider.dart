@@ -4,6 +4,7 @@ import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../helpers/gentiAPI_helper.dart';
 
 class LoginProvider extends ChangeNotifier {
   Player _loggedPlayer;
@@ -46,11 +47,12 @@ class LoginProvider extends ChangeNotifier {
   Future<void> getAndSetLoggedPlayerTeam() async {
     print(
         '[LoginProvider/getAndSetLoggedPlayerTeam] get team ${_loggedPlayer.teamId}');
-    if (loggedPlayer.teamId != null)
+    if (loggedPlayer.teamId != null) {
       _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
-    print(
-        '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
-    notifyListeners();
+      print(
+          '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
+      notifyListeners();
+    }
   }
 
   Future<void> tryAutoSignIn() async {
@@ -66,14 +68,6 @@ class LoginProvider extends ChangeNotifier {
     print('[LoginProvider/tryAutoSignIn] No user found in storage');
   }
 
-  Future<void> logOut() async {
-    await SharedPreferencesHelper.logout();
-    await FirebaseHelper.userLogout();
-    _loggedPlayer = null;
-    _loggedPlayerTeam = null;
-    notifyListeners();
-  }
-
   Future<void> trySignUp(String email, String pwd, String nickname) async {
     print('[LoginProvider/trySignup] $nickname | $email - $pwd');
 
@@ -81,11 +75,26 @@ class LoginProvider extends ChangeNotifier {
       _loggedPlayer =
           await FirebaseHelper.userSignUp(email.toLowerCase(), pwd, nickname);
       await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
+
+      // await GentiHelper.registerUser({
+      //   'email': _loggedPlayer.email,
+      //   'pwd': pwd,
+      //   'nickname': _loggedPlayer.nickname,
+      //   'sono': '0',
+      // });
       notifyListeners();
     } catch (e) {
       print(e);
       throw e;
     }
+  }
+
+  Future<void> logOut() async {
+    await SharedPreferencesHelper.logout();
+    await FirebaseHelper.userLogout();
+    _loggedPlayer = null;
+    _loggedPlayerTeam = null;
+    notifyListeners();
   }
 
   Future<void> createNewTeam({String name, String pwd}) async {

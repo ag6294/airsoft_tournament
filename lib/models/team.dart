@@ -25,8 +25,9 @@ class Team {
         this.name = map['name'],
         this.password = map['password'],
         this.players = map['players'] != null
-            ? List<Player>.from(
-                (map['players']).map((e) => Player.fromMap(e['id'], e)))
+            ? List<Player>.from(map['players']
+                .map((k, v) => MapEntry(k, Player.fromMap(k, v)))
+                .values)
             : [],
         this.imageUrl = map['imageUrl'],
         this.contacts = map['contacts'],
@@ -35,7 +36,8 @@ class Team {
   Map<String, dynamic> get asMap => {
         'id': id,
         'name': name,
-        'players': players.map((player) => player.asMap).toList(),
+        'players':
+            Map.fromIterable(players, key: (p) => p.id, value: (p) => p.asMap),
         'imageUrl': imageUrl,
         'contacts': contacts,
         'description': description,
