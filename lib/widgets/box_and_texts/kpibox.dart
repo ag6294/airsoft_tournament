@@ -32,8 +32,9 @@ class KPIBox extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   label,
-                  style: kBigText,
-                  maxLines: 2,
+                  style: kMediumText,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
                 ),
               ),
             ],

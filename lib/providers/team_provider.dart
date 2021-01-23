@@ -26,4 +26,6 @@ class TeamsProvider extends ChangeNotifier {
 
     return await FirebaseHelper.getTeamById(id);
   }
+
+  void logOut() {}
 }

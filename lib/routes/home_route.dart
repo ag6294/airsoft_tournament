@@ -1,6 +1,7 @@
 import 'package:airsoft_tournament/constants/style.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
+import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,11 @@ class _HomeRouteState extends State<HomeRoute> {
 PopupMenuButton _settingsMenu(BuildContext context) {
   final itemsList = [
     PopupMenuItem(
-      value: () => Provider.of<LoginProvider>(context, listen: false).logOut(),
+      value: () {
+        Provider.of<GamesProvider>(context, listen: false).logOut();
+        Provider.of<TeamsProvider>(context, listen: false).logOut();
+        Provider.of<LoginProvider>(context, listen: false).logOut();
+      },
       child: Text('Logout'),
     ),
     if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)

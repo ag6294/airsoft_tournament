@@ -16,6 +16,12 @@ class GamesProvider extends ChangeNotifier {
     fetchAndSetLoggedUserParticipations(playerId);
   }
 
+  void logOut() {
+    _games = [];
+    _loggedUserParticipations = [];
+    _gameParticipations = [];
+  }
+
   List<Game> get games => _games;
   List<GameParticipation> get loggedUserParticipations =>
       _loggedUserParticipations;

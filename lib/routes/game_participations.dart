@@ -20,7 +20,7 @@ class GameParticipationsRoute extends StatefulWidget {
 }
 
 class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
-  bool isGM;
+  Player loggedPlayer;
   bool isEditing = false;
   Game game;
 
@@ -33,7 +33,8 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     game = ModalRoute.of(context).settings.arguments;
-    isGM = Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM;
+    loggedPlayer =
+        Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
 
     //If the game is hosted by my team, then I will do stuff to show the players from my team that have not replied yet
     playerNotReplied = game.hostTeamId.compareTo(
@@ -66,7 +67,9 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       appBar: AppBar(
         title: Text('Presenze'),
         actions: [
-          if (game.date.isAfter(DateTime.now()) && isGM)
+          if (game.date.isAfter(DateTime.now()) &&
+              loggedPlayer.isGM &&
+              loggedPlayer.teamId.compareTo(game.hostTeamId) == 0)
             IconButton(
                 icon: !isEditing ? Icon(Icons.edit) : Icon(Icons.edit_off),
                 onPressed: () {
@@ -136,8 +139,11 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
           );
         }),
       ),
-      persistentFooterButtons:
-          isGM && !isEditing ? [_ModalBottomSheetButton(game)] : null,
+      persistentFooterButtons: loggedPlayer.isGM &&
+              loggedPlayer.teamId.compareTo(game.hostTeamId) == 0 &&
+              !isEditing
+          ? [_ModalBottomSheetButton(game)]
+          : null,
     );
   }
 }
