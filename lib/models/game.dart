@@ -12,6 +12,8 @@ class Game {
   final String hostTeamId;
   final String hostTeamName;
   final String attachmentUrl;
+  final List<Faction> factions;
+  final bool isPrivate;
 
   Game(
       {@required this.id,
@@ -24,7 +26,9 @@ class Game {
       @required this.imageUrl,
       @required this.hostTeamId,
       @required this.hostTeamName,
-      @required this.attachmentUrl});
+      @required this.attachmentUrl,
+      @required this.factions,
+      @required this.isPrivate});
 
   Game.fromMap(String id, Map map)
       : this.id = map['id'],
@@ -37,7 +41,12 @@ class Game {
         this.imageUrl = map['imageUrl'],
         this.hostTeamId = map['hostTeamId'],
         this.hostTeamName = map['hostTeamName'],
-        this.attachmentUrl = map['attachmentUrl'];
+        this.attachmentUrl = map['attachmentUrl'],
+        this.factions = map['factions'] != null
+            ? List<Faction>.from(
+                map['factions']?.map((e) => Faction.fromMap(e)))
+            : [],
+        this.isPrivate = map['isPrivate'];
 
   Map<String, dynamic> get asMap {
     return {
@@ -52,6 +61,27 @@ class Game {
       'hostTeamId': hostTeamId,
       'hostTeamName': hostTeamName,
       'attachmentUrl': attachmentUrl,
+      'factions': factions.map((e) => e.asMap).toList(),
+      'isPrivate': isPrivate,
     };
   }
+}
+
+class Faction {
+  final String id;
+  final String name;
+
+  Faction({
+    @required this.id,
+    @required this.name,
+  });
+
+  Faction.fromMap(Map<String, dynamic> map)
+      : this.id = map['id'],
+        name = map['name'];
+
+  Map<String, dynamic> get asMap => {
+        'id': id,
+        'name': name,
+      };
 }

@@ -2,6 +2,7 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/team_edit_route.dart';
+import 'package:airsoft_tournament/routes/team_members.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/detail_routes_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class _TeamDetailRouteState extends State<TeamDetailRoute> {
           onModifyPop,
         ),
         TeamDetails(team),
+        BottomButtons(team),
       ],
     ));
   }
@@ -161,6 +163,37 @@ class TeamDetails extends StatelessWidget {
               team.contacts == null || team.contacts == ''
                   ? 'Nessun contatto inserito'
                   : team.contacts),
+        ],
+      ),
+    );
+  }
+}
+
+class BottomButtons extends StatelessWidget {
+  final Team team;
+
+  BottomButtons(this.team);
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList(
+      delegate: SliverChildListDelegate(
+        [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context)
+                        .pushNamed(TeamMembersRoute.routeName, arguments: team),
+                    child: Text('Lista degli iscritti'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

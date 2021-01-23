@@ -12,6 +12,10 @@ class GamesProvider extends ChangeNotifier {
     print('[GameProvider] Constructor');
   }
 
+  void initialize(String playerId) {
+    fetchAndSetLoggedUserParticipations(playerId);
+  }
+
   List<Game> get games => _games;
   List<GameParticipation> get loggedUserParticipations =>
       _loggedUserParticipations;
@@ -33,7 +37,13 @@ class GamesProvider extends ChangeNotifier {
   Future<Game> addNewGame(Game newGame) async {
     print('[GameProvider/addNewGame] title: ${newGame.title}');
 
-    final uploadedGame = await FirebaseHelper.addGame(newGame);
+    Game uploadedGame;
+
+    try {
+      uploadedGame = await FirebaseHelper.addGame(newGame);
+    } catch (e) {
+      rethrow;
+    }
     _games.add(uploadedGame);
 
     //Sort by date descending
@@ -45,7 +55,16 @@ class GamesProvider extends ChangeNotifier {
   Future<void> fetchAndSetGames(String teamId, bool forceRefresh) async {
     print('[GameProvider/fetchAndSetGames] starting');
     if (_games.isEmpty || forceRefresh) {
+      //TODO fare controllo non con teamId ma con loggedUser team id se mettiamo la lsita delle giocate nella pagina del team
       _games = await FirebaseHelper.fetchFutureGames();
+
+      print(games);
+
+      _games.removeWhere(
+          (element) => element.hostTeamId != teamId && element.isPrivate);
+
+      print(games);
+
       _games.sort((a, b) => b.date.compareTo(a.date));
       print('[GameProvider/fetchAndSetGames] ending');
 
@@ -71,11 +90,32 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchAndSetGameParticipations(String gameId) async {
+  Future<void> fetchAndSetGameParticipations(Game game) async {
     print(
-        '[GameProvider/fetchAndSetGameParticipations] starting for teamId : $gameId');
+        '[GameProvider/fetchAndSetGameParticipations] starting for teamId : ${game.id}');
 
-    _gameParticipations = await FirebaseHelper.fetchGameParticipations(gameId);
+    _gameParticipations = await FirebaseHelper.fetchGameParticipations(game.id);
+
+    for (int i = 0; i < _gameParticipations.length; i++) {
+      var found = false;
+      final p = _gameParticipations[i];
+      game.factions.forEach((f) {
+        if (f.id.compareTo(p.faction) == 0) found = true;
+      });
+      if (!found) {
+        _gameParticipations.removeAt(i);
+        _gameParticipations.insert(
+            i,
+            GameParticipation(
+                id: p.id,
+                gameId: p.gameId,
+                gameName: p.gameName,
+                playerId: p.playerId,
+                playerName: p.playerName,
+                isGoing: p.isGoing));
+      }
+    }
+
     sortParticipations();
 
     notifyListeners();

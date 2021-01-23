@@ -4,6 +4,7 @@ import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 
 import 'package:airsoft_tournament/routes/games_route.dart';
@@ -25,14 +26,16 @@ class _HomeRouteState extends State<HomeRoute> {
       body: WillPopScope(
         onWillPop: () {},
         child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            // mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              HomePageTitle(),
-              HomePageParticipations(),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              // mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HomePageTitle(),
+                HomePageParticipations(),
+              ],
+            ),
           ),
         ),
       ),
@@ -112,43 +115,61 @@ class HomePageTitle extends StatelessWidget {
   }
 }
 
-class HomePageParticipations extends StatelessWidget {
+class HomePageParticipations extends StatefulWidget {
+  @override
+  _HomePageParticipationsState createState() => _HomePageParticipationsState();
+}
+
+class _HomePageParticipationsState extends State<HomePageParticipations> {
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<GamesProvider>(context, listen: false)
+        .fetchAndSetLoggedUserParticipations(
+            Provider.of<LoginProvider>(context, listen: false).loggedPlayer.id);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<GamesProvider>(
-      builder: (context, games, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              KPIBox(
-                  value: games.loggedUserParticipations
-                      ?.where((element) => element.isGoing)
-                      ?.length
-                      ?.toString(),
-                  label: 'Presenze'),
-              KPIBox(
-                  value: games.loggedUserParticipations
-                      ?.where((element) => !element.isGoing)
-                      ?.length
-                      ?.toString(),
-                  label: 'Assenze'),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              child: Text('Vai alla lista delle partite'),
-              onPressed: () async {
-                await Navigator.of(context).pushNamed(GamesRoute.routeName);
-              },
+    return ModalProgressHUD(
+      inAsyncCall: isLoading,
+      child: Consumer<GamesProvider>(
+        builder: (context, games, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                KPIBox(
+                    value: games.loggedUserParticipations
+                        ?.where((element) => element.isGoing)
+                        ?.length
+                        ?.toString(),
+                    label: 'Presenze'),
+                KPIBox(
+                    value: games.loggedUserParticipations
+                        ?.where((element) => !element.isGoing)
+                        ?.length
+                        ?.toString(),
+                    label: 'Assenze'),
+              ],
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                child: Text('Vai alla lista delle partite'),
+                onPressed: () async {
+                  await Navigator.of(context).pushNamed(GamesRoute.routeName);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

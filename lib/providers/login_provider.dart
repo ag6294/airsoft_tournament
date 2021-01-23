@@ -77,10 +77,7 @@ class LoginProvider extends ChangeNotifier {
       await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
 
       // await GentiHelper.registerUser({
-      //   'email': _loggedPlayer.email,
-      //   'pwd': pwd,
-      //   'nickname': _loggedPlayer.nickname,
-      //   'sono': '0',
+      //   player, pwd
       // });
       notifyListeners();
     } catch (e) {

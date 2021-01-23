@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 
+const kFakeFactionId = 'asdfasdfsadf';
+
 class GameParticipationsRoute extends StatefulWidget {
   static const routeName = '/game/participations';
 
@@ -25,8 +27,6 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   List<GameParticipation> participations = [];
   List<Player> playerNotReplied = [];
 
-  final factions = ['Alpha', 'Bravo', 'Charlie'];
-  List<DropdownMenuItem> factionsButtons;
   List<KPIBox> factionsBoxes;
 
   @override
@@ -34,28 +34,26 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
     super.didChangeDependencies();
     game = ModalRoute.of(context).settings.arguments;
     isGM = Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM;
-    //TODO Add padding to DropdownMenuItem
-    factionsButtons = factions
-        .map((e) => DropdownMenuItem(
-              value: e,
-              child: Text(e),
-            ))
-        .toList();
 
-    playerNotReplied = Provider.of<LoginProvider>(context, listen: false)
-        .loggedPlayerTeam
-        .players;
+    //If the game is hosted by my team, then I will do stuff to show the players from my team that have not replied yet
+    playerNotReplied = game.hostTeamId.compareTo(
+                Provider.of<LoginProvider>(context).loggedPlayerTeam.id) ==
+            0
+        ? Provider.of<LoginProvider>(context, listen: false)
+            .loggedPlayerTeam
+            .players
+        : [];
 
     _refreshFactionKPIs();
   }
 
   void _refreshFactionKPIs() {
-    factionsBoxes = factions
+    factionsBoxes = game.factions
         .map((e) => KPIBox(
-              label: e,
+              label: e.name,
               value: participations
                   .where((element) =>
-                      element.isGoing && element.faction?.compareTo(e) == 0)
+                      element.isGoing && element.faction?.compareTo(e.id) == 0)
                   .length
                   .toString(),
             ))
@@ -83,7 +81,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       body: RefreshIndicator(
         onRefresh: () async {
           Provider.of<GamesProvider>(context, listen: false)
-              .fetchAndSetGameParticipations(game.id);
+              .fetchAndSetGameParticipations(game);
         },
         child: Consumer<GamesProvider>(builder: (context, gameProvider, _) {
           participations = gameProvider.gameParticipations;
@@ -129,7 +127,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
                   itemCount: participations.length + playerNotReplied.length,
                   itemBuilder: (context, index) => index < participations.length
                       ? ParticipationCard(
-                          participations[index], isEditing, factionsButtons)
+                          participations[index], isEditing, game)
                       : PlayerNotRepliedCard(
                           playerNotReplied[index - participations.length]),
                 ),
@@ -144,40 +142,69 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   }
 }
 
-class ParticipationCard extends StatelessWidget {
+class ParticipationCard extends StatefulWidget {
   final GameParticipation participation;
   final bool isEditing;
-  final List<DropdownMenuItem> factions;
+  final Game game;
 
-  const ParticipationCard(this.participation, this.isEditing, this.factions);
+  const ParticipationCard(this.participation, this.isEditing, this.game);
+
+  @override
+  _ParticipationCardState createState() => _ParticipationCardState();
+}
+
+class _ParticipationCardState extends State<ParticipationCard> {
+  List<DropdownMenuItem> factionsButtons;
+
+  @override
+  void initState() {
+    super.initState();
+    factionsButtons = widget.game.factions
+        .map((e) => DropdownMenuItem(
+              value: e.id,
+              child: Text(e.name),
+            ))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       dense: true,
       isThreeLine: false,
-      key: ValueKey(participation.id),
+      key: ValueKey(widget.participation.id),
       title: Text(
-        participation.playerName,
+        widget.participation.playerName,
         style: kBigText,
       ),
-      subtitle: !participation.isGoing
+      subtitle: !widget.participation.isGoing
           ? Text('Assente')
-          : !isEditing
-              ? Text(participation.faction ?? 'Non assegnato a nessuna fazione')
+          : !widget.isEditing
+              ? widget.participation.faction == null ||
+                      widget.participation.faction == ''
+                  ? Text('Non assegnato a nessuna fazione')
+                  : Text(widget.game.factions
+                      .firstWhere(
+                        (element) => element.id == widget.participation.faction,
+                        orElse: () => Faction(
+                          id: kFakeFactionId,
+                          name: 'Non assegnato a nessuna fazione',
+                        ),
+                      )
+                      .name)
               : DropdownButton<String>(
                   isExpanded: true,
                   hint: Text('Scegli una fazione'),
-                  value: participation.faction,
-                  items: factions,
+                  value: widget.participation.faction,
+                  items: factionsButtons,
                   onChanged: (value) {
                     final newParticipation = GameParticipation(
-                      id: participation.id,
-                      gameId: participation.gameId,
-                      gameName: participation.gameName,
-                      playerName: participation.playerName,
-                      playerId: participation.playerId,
-                      isGoing: participation.isGoing,
+                      id: widget.participation.id,
+                      gameId: widget.participation.gameId,
+                      gameName: widget.participation.gameName,
+                      playerName: widget.participation.playerName,
+                      playerId: widget.participation.playerId,
+                      isGoing: widget.participation.isGoing,
                       faction: value,
                     );
 
@@ -190,19 +217,19 @@ class ParticipationCard extends StatelessWidget {
                                     .loggedPlayer
                                     .id);
                   }),
-      trailing: !isEditing
-          ? ParticipationIcon(participation.isGoing)
+      trailing: !widget.isEditing
+          ? ParticipationIcon(widget.participation.isGoing)
           : Switch.adaptive(
-              value: participation.isGoing,
+              value: widget.participation.isGoing,
               onChanged: (value) {
                 final newParticipation = GameParticipation(
-                  id: participation.id,
-                  gameId: participation.gameId,
-                  gameName: participation.gameName,
-                  playerName: participation.playerName,
-                  playerId: participation.playerId,
+                  id: widget.participation.id,
+                  gameId: widget.participation.gameId,
+                  gameName: widget.participation.gameName,
+                  playerName: widget.participation.playerName,
+                  playerId: widget.participation.playerId,
                   isGoing: value,
-                  faction: participation.faction,
+                  faction: widget.participation.faction,
                 );
 
                 Provider.of<GamesProvider>(context, listen: false)

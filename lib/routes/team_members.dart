@@ -1,3 +1,6 @@
+import 'package:airsoft_tournament/models/game.dart';
+import 'package:airsoft_tournament/models/player.dart';
+import 'package:airsoft_tournament/models/team.dart';
 import 'package:flutter/material.dart';
 
 class TeamMembersRoute extends StatefulWidget {
@@ -7,10 +10,40 @@ class TeamMembersRoute extends StatefulWidget {
 }
 
 class _TeamMembersRouteState extends State<TeamMembersRoute> {
+  Team team;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    team = ModalRoute.of(context).settings.arguments;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+        appBar: AppBar(
+          title: Text(
+            team.name,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        body: ListView.builder(
+            itemCount: team.players.length,
+            itemBuilder: (context, i) => PlayerTile(team.players[i])));
+  }
+}
+
+class PlayerTile extends StatelessWidget {
+  final Player player;
+
+  PlayerTile(this.player);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(player.nickname),
+      subtitle: Text(player.isGM ? 'Game Maker' : 'Associato'),
+      dense: true,
     );
   }
 }

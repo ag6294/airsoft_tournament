@@ -37,7 +37,7 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
     final Game gameFromPop = ModalRoute.of(context).settings.arguments;
     game = gameFromPop ?? game;
     Provider.of<GamesProvider>(context, listen: false)
-        .fetchAndSetGameParticipations(game.id);
+        .fetchAndSetGameParticipations(game);
   }
 
   void onModifyPop(Game editedGame) {
@@ -300,18 +300,30 @@ class MenuPopUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itemsList = [
-      if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+      if (Provider.of<LoginProvider>(context, listen: false)
+              .loggedPlayer
+              .isGM &&
+          Provider.of<LoginProvider>(context, listen: false)
+                  .loggedPlayer
+                  .teamId ==
+              game.hostTeamId)
         PopupMenuItem(
           value: () => Navigator.of(context)
               .pushNamed(EditGameRoute.routeName, arguments: game)
               .then((value) => editCallback(value)),
           child: Text('Modifica'),
         ),
-      if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
+      if (Provider.of<LoginProvider>(context, listen: false)
+              .loggedPlayer
+              .isGM &&
+          Provider.of<LoginProvider>(context, listen: false)
+                  .loggedPlayer
+                  .teamId ==
+              game.hostTeamId)
         PopupMenuItem(
           value: () {
             Provider.of<GamesProvider>(context, listen: false).deleteGame(game);
-            // Navigator.of(context).pop();
+            Navigator.of(context).pop();
           },
           child: Text('Elimina'),
         ),

@@ -33,6 +33,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _imageController = TextEditingController();
   final TextEditingController _attachmentController = TextEditingController();
+  final TextEditingController _factionsController = TextEditingController();
 
   Game args;
   var editedGame = Game(
@@ -47,6 +48,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
     hostTeamName: '',
     hostTeamId: '',
     attachmentUrl: '',
+    isPrivate: false,
+    factions: [],
   );
 
   var isEditing = false;
@@ -77,6 +80,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
     _dateController.dispose();
     _imageController.dispose();
     _attachmentController.dispose();
+    _factionsController.dispose();
   }
 
   void _saveForm(BuildContext context) async {
@@ -109,6 +113,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
         imageUrl: editedGame.imageUrl,
         id: editedGame.id,
         attachmentUrl: editedGame.attachmentUrl,
+        factions: editedGame.factions,
+        isPrivate: editedGame.isPrivate,
       );
       try {
         if (!isEditing)
@@ -137,6 +143,25 @@ class _EditGameRouteState extends State<EditGameRoute> {
       else
         Navigator.of(context).pushReplacementNamed(GameDetailRoute.routeName,
             arguments: newGame);
+    }
+  }
+
+  void removeFaction(Faction faction) {
+    setState(() {
+      editedGame.factions
+          .removeWhere((element) => element.id.compareTo(faction.id) == 0);
+    });
+  }
+
+  void addFaction() {
+    if (_factionsController != null && _factionsController.text != '') {
+      setState(() {
+        final faction = Faction(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            name: _factionsController.text);
+        editedGame.factions.add(faction);
+        _factionsController.clear();
+      });
     }
   }
 
@@ -184,6 +209,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         hostTeamId: editedGame.hostTeamId,
                         hostTeamName: editedGame.hostTeamName,
                         attachmentUrl: editedGame.attachmentUrl,
+                        factions: editedGame.factions,
+                        isPrivate: editedGame.isPrivate,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -212,6 +239,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         hostTeamId: editedGame.hostTeamId,
                         hostTeamName: editedGame.hostTeamName,
                         attachmentUrl: editedGame.attachmentUrl,
+                        factions: editedGame.factions,
+                        isPrivate: editedGame.isPrivate,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -239,6 +268,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         hostTeamId: editedGame.hostTeamId,
                         hostTeamName: editedGame.hostTeamName,
                         attachmentUrl: editedGame.attachmentUrl,
+                        factions: editedGame.factions,
+                        isPrivate: editedGame.isPrivate,
                       );
                     },
                     validator: (value) => _validateText(value),
@@ -277,6 +308,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         hostTeamId: editedGame.hostTeamId,
                         hostTeamName: editedGame.hostTeamName,
                         attachmentUrl: editedGame.attachmentUrl,
+                        factions: editedGame.factions,
+                        isPrivate: editedGame.isPrivate,
                       );
                     },
                   ),
@@ -300,67 +333,168 @@ class _EditGameRouteState extends State<EditGameRoute> {
                         imageUrl: editedGame.imageUrl,
                         hostTeamId: editedGame.hostTeamId,
                         hostTeamName: editedGame.hostTeamName,
+                        factions: editedGame.factions,
+                        isPrivate: editedGame.isPrivate,
                         attachmentUrl: value,
                       );
                     },
                     validator: (value) => _validateUrl(value),
                   ),
-                  GestureDetector(
-                    onTap: () async {
-                      FocusScope.of(context).unfocus();
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          FocusScope.of(context).unfocus();
 
-                      final picker = ImagePicker();
-                      final pickedImage =
-                          await picker.getImage(source: ImageSource.gallery);
+                          final picker = ImagePicker();
+                          final pickedImage = await picker.getImage(
+                              source: ImageSource.gallery);
 
-                      _imageController.text = pickedImage.path;
+                          _imageController.text = pickedImage.path;
 
-                      editedGame = Game(
-                        place: editedGame.place,
-                        lastModifiedOn: editedGame.lastModifiedOn,
-                        lastModifiedBy: editedGame.lastModifiedBy,
-                        description: editedGame.description,
-                        date: editedGame.date,
-                        id: editedGame.id,
-                        title: editedGame.title,
-                        imageUrl: pickedImage.path,
-                        hostTeamId: editedGame.hostTeamId,
-                        hostTeamName: editedGame.hostTeamName,
-                        attachmentUrl: editedGame.attachmentUrl,
-                      );
+                          editedGame = Game(
+                            place: editedGame.place,
+                            lastModifiedOn: editedGame.lastModifiedOn,
+                            lastModifiedBy: editedGame.lastModifiedBy,
+                            description: editedGame.description,
+                            date: editedGame.date,
+                            id: editedGame.id,
+                            title: editedGame.title,
+                            imageUrl: pickedImage.path,
+                            hostTeamId: editedGame.hostTeamId,
+                            hostTeamName: editedGame.hostTeamName,
+                            attachmentUrl: editedGame.attachmentUrl,
+                            factions: editedGame.factions,
+                            isPrivate: editedGame.isPrivate,
+                          );
 
-                      setState(() {});
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 100,
-                      ),
-                      child: AspectRatio(
-                        aspectRatio: 1.0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(12),
+                          setState(() {});
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12.0,
+                            horizontal: 12.0,
+                          ),
+                          child: SizedBox(
+                            height: 120,
+                            width: 120,
+                            child: AspectRatio(
+                              aspectRatio: 1.0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(12),
+                                    ),
+                                    color: Theme.of(context).cardColor),
+                                child: editedGame.imageUrl != ''
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: fb.FirebaseHelper.isNetworkImage(
+                                                editedGame.imageUrl)
+                                            ? Image.network(editedGame.imageUrl,
+                                                fit: BoxFit.cover)
+                                            : Image.file(
+                                                File(editedGame.imageUrl),
+                                                fit: BoxFit.cover,
+                                              ),
+                                      )
+                                    : Center(
+                                        child: Text(
+                                        '+ Scegli un\'immagine (Obbligatorio)',
+                                        textAlign: TextAlign.center,
+                                      )),
                               ),
-                              color: Theme.of(context).cardColor),
-                          child: editedGame.imageUrl != ''
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: fb.FirebaseHelper.isNetworkImage(
-                                          editedGame.imageUrl)
-                                      ? Image.network(editedGame.imageUrl,
-                                          fit: BoxFit.cover)
-                                      : Image.file(
-                                          File(editedGame.imageUrl),
-                                          fit: BoxFit.cover,
-                                        ),
-                                )
-                              : Center(child: Text('+ Scegli un\'immagine')),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  )
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Switch(
+                                value: !editedGame.isPrivate,
+                                onChanged: (value) {
+                                  setState(() {
+                                    editedGame = Game(
+                                      place: editedGame.place,
+                                      lastModifiedOn: editedGame.lastModifiedOn,
+                                      lastModifiedBy: editedGame.lastModifiedBy,
+                                      description: editedGame.description,
+                                      date: editedGame.date,
+                                      id: editedGame.id,
+                                      title: editedGame.title,
+                                      imageUrl: editedGame.imageUrl,
+                                      hostTeamId: editedGame.hostTeamId,
+                                      hostTeamName: editedGame.hostTeamName,
+                                      attachmentUrl: editedGame.attachmentUrl,
+                                      factions: editedGame.factions,
+                                      isPrivate: !value,
+                                    );
+                                  });
+                                }),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  bottom: 12, right: 8.0, left: 12),
+                              child: Text(
+                                editedGame.isPrivate
+                                    ? 'Evento non visibile ad altri team'
+                                    : 'Evento visibile ad altri team',
+                                maxLines: 2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                      height: editedGame.factions.length == 0 ? 0 : 50,
+                      //   child: ListView.builder(
+                      //       reverse: true,
+                      //       // padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      //       // shrinkWrap: true,
+                      //       scrollDirection: Axis.horizontal,
+                      //       itemCount: editedGame.factions.length,
+                      //       itemBuilder: (context, i) => Padding(
+                      //             padding:
+                      //                 const EdgeInsets.symmetric(horizontal: 4.0),
+                      //             child: FactionChip(
+                      //                 ValueKey(editedGame.factions[i].id),
+                      //                 editedGame.factions[i],
+                      //                 removeFaction),
+                      //           )),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        reverse: true,
+                        children: editedGame.factions.reversed
+                            .map((e) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4.0),
+                                  child: FactionChip(
+                                      ValueKey(e.id), e, removeFaction),
+                                ))
+                            .toList(),
+                      )),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FlatButton(
+                          onPressed: addFaction,
+                          child: Text('Aggiungi fazione')),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: TextField(
+                            controller: _factionsController,
+                            onSubmitted: (_) => addFaction(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -387,5 +521,27 @@ class _EditGameRouteState extends State<EditGameRoute> {
     if (value == null || value == '') return null;
     if (isAttachmentUrlValid) return null;
     return 'Inserisci un URL corretto, copiandolo dal browser';
+  }
+}
+
+class FactionChip extends StatelessWidget {
+  final Faction faction;
+  final Function onDelete;
+  const FactionChip(
+    Key key,
+    this.faction,
+    this.onDelete,
+  ) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InputChip(
+      label: Text('${faction.name}'),
+      deleteIcon: Icon(
+        Icons.cancel,
+        size: 20,
+      ),
+      onDeleted: () => onDelete(faction),
+    );
   }
 }

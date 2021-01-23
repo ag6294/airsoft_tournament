@@ -101,20 +101,27 @@ class GameCard extends StatelessWidget {
                 child: Text(
                   game.title,
                   style: kCardTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  // maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 12.0,
-                      bottom: 12.0,
-                      right: 12.0,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 12.0,
+                        bottom: 12.0,
+                        right: 12.0,
+                      ),
+                      child: Text(
+                        game.hostTeamName + ', ' + game.place,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
                     ),
-                    child: Text(game.place),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(

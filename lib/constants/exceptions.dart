@@ -21,3 +21,13 @@ void showCustomErrorDialog(BuildContext context, String text) {
     },
   );
 }
+
+class GentiAPIException implements Exception {
+  final String cause;
+  GentiAPIException(this.cause);
+}
+
+class FirebaseDBException implements Exception {
+  final String cause;
+  FirebaseDBException(this.cause);
+}
