@@ -17,7 +17,6 @@ import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/routes/game_participations.dart';
 
 import 'package:airsoft_tournament/widgets/box_and_texts/detail_routes_elements.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 import 'edit_game_route.dart';
 

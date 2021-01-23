@@ -1,5 +1,5 @@
 import 'package:airsoft_tournament/constants/style.dart';
-import 'package:airsoft_tournament/models/team.dart';
+
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 import 'package:airsoft_tournament/routes/games_route.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
-import '../models/game_participation.dart';
+
 import '../routes/team_edit_route.dart';
 
 class HomeRoute extends StatefulWidget {
@@ -24,6 +24,7 @@ class _HomeRouteState extends State<HomeRoute> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: WillPopScope(
+        // ignore: missing_return
         onWillPop: () {},
         child: SafeArea(
           child: SingleChildScrollView(

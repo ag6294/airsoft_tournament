@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:airsoft_tournament/constants/exceptions.dart';
-import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:path/path.dart' as ph;
 
 import 'package:airsoft_tournament/models/game.dart';

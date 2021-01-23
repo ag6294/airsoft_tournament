@@ -4,7 +4,6 @@ import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../helpers/gentiAPI_helper.dart';
 
 class LoginProvider extends ChangeNotifier {
   Player _loggedPlayer;

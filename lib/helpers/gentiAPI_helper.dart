@@ -2,7 +2,6 @@ import 'package:airsoft_tournament/constants/exceptions.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 const endpoint = 'http://dev.airsofttacticalmaps.eu/api';
 

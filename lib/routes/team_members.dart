@@ -1,4 +1,4 @@
-import 'package:airsoft_tournament/models/game.dart';
+
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:flutter/material.dart';

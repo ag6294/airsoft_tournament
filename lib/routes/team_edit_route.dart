@@ -1,21 +1,21 @@
 import 'dart:io';
 
-import 'package:airsoft_tournament/models/game.dart';
+
 import 'package:airsoft_tournament/models/team.dart';
-import 'package:airsoft_tournament/providers/games_provider.dart';
+
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
-import 'package:airsoft_tournament/routes/game_detail.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
+
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/constants/exceptions.dart' as exc;
 import 'package:airsoft_tournament/helpers/firebase_helper.dart' as fb;
-import 'package:url_launcher/url_launcher.dart';
+
 import 'package:airsoft_tournament/constants/style.dart';
 
 // ignore: must_be_immutable

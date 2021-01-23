@@ -319,7 +319,7 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
       isLoading = true;
     });
 
-    await Provider.of<GamesProvider>(context, listen: false).editParticipation(
+    Provider.of<GamesProvider>(context, listen: false).editParticipation(
         GameParticipation(
             id: null,
             gameId: widget.game.id,
