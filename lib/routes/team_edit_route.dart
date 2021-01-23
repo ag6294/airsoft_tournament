@@ -1,6 +1,5 @@
 import 'dart:io';
 
-
 import 'package:airsoft_tournament/models/team.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
