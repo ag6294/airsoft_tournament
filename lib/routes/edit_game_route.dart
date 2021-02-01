@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
-import 'package:airsoft_tournament/routes/game_detail.dart';
+import 'package:airsoft_tournament/routes/game_detail_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';

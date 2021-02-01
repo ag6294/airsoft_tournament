@@ -22,8 +22,8 @@ class _TeamMembersRouteState extends State<TeamMembersRoute> {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            team.name,
-            overflow: TextOverflow.ellipsis,
+            'Membri dei ' + team.name,
+            overflow: TextOverflow.fade,
           ),
         ),
         body: ListView.builder(

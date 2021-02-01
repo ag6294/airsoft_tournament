@@ -14,7 +14,7 @@ import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:airsoft_tournament/models/player.dart';
-import 'package:airsoft_tournament/routes/game_participations.dart';
+import 'package:airsoft_tournament/routes/game_participations_route.dart';
 
 import 'package:airsoft_tournament/widgets/box_and_texts/detail_routes_elements.dart';
 

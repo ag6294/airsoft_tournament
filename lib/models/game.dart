@@ -46,7 +46,7 @@ class Game {
             ? List<Faction>.from(
                 map['factions']?.map((e) => Faction.fromMap(e)))
             : [],
-        this.isPrivate = map['isPrivate'];
+        this.isPrivate = map['isPrivate'] ?? false;
 
   Map<String, dynamic> get asMap {
     return {

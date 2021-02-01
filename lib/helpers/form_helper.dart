@@ -44,4 +44,12 @@ class FormHelper {
 
     return isValid;
   }
+
+  static String validateGenericText(String text1) {
+    String isValid;
+
+    if (text1 == null || text1 == '') isValid = 'Compila questo campo';
+
+    return isValid;
+  }
 }

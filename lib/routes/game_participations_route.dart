@@ -330,7 +330,7 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
             id: null,
             gameId: widget.game.id,
             gameName: widget.game.title,
-            playerId: DateTime.now().millisecond.toString(),
+            playerId: DateTime.now().millisecondsSinceEpoch.toString(),
             playerName: hostName,
             isGoing: true),
         false);

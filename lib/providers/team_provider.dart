@@ -1,8 +1,14 @@
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/models/team.dart';
+import 'package:airsoft_tournament/models/team_post.dart';
 import 'package:flutter/foundation.dart';
 
 class TeamsProvider extends ChangeNotifier {
+  List<TeamPost> _posts = [];
+
+  List<TeamPost> get posts => List<TeamPost>.from(
+      _posts..sort((a, b) => a.creationDate.compareTo(b.creationDate)));
+
   Future<List<Team>> fetchTeams() async {
     List<Team> teams = [];
     print('[LoginProvider/fetchTeams] starting');
@@ -27,5 +33,37 @@ class TeamsProvider extends ChangeNotifier {
     return await FirebaseHelper.getTeamById(id);
   }
 
-  void logOut() {}
+  void logOut() {
+    _posts = [];
+  }
+
+  Future<void> fetchAndSetPosts(String teamId, bool isLoggedPlayerTeam) async {
+    final newPosts = await FirebaseHelper.fetchTeamPosts(teamId);
+    if (!isLoggedPlayerTeam)
+      newPosts.removeWhere((element) => element.isPrivate);
+    _posts = List<TeamPost>.from(newPosts);
+    notifyListeners();
+  }
+
+  Future<void> addOrEditPost(TeamPost post) async {
+    if (post.id == null) {
+      //new
+      final newPost = await FirebaseHelper.addTeamPost(post);
+      _posts.add(newPost);
+    } else {
+      //edit
+      final newPost = await FirebaseHelper.editTeamPost(post);
+      _posts.removeWhere((element) => element.id.compareTo(post.id) == 0);
+      _posts.add(newPost);
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> deletePost(TeamPost post) async {
+    FirebaseHelper.deletePost(post);
+    _posts.removeWhere((element) => element.id.compareTo(post.id) == 0);
+
+    notifyListeners();
+  }
 }

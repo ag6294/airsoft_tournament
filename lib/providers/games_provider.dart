@@ -106,7 +106,7 @@ class GamesProvider extends ChangeNotifier {
       var found = false;
       final p = _gameParticipations[i];
       game.factions.forEach((f) {
-        if (f.id.compareTo(p.faction) == 0) found = true;
+        if (f.id == p.faction) found = true;
       });
       if (!found) {
         _gameParticipations.removeAt(i);
@@ -130,16 +130,16 @@ class GamesProvider extends ChangeNotifier {
   void editParticipation(
       GameParticipation participation, bool isLoggedUserParticipation) {
     print(
-        '[GameProvider/editParticipation] starting for userId : ${participation.id} and gameId : ${participation.gameId}');
+        '[GameProvider/editParticipation] starting for participation ${participation.asMap}');
     if (participation.id != null) {
       final index = _gameParticipations
           .indexWhere((element) => element.id == participation.id);
 
-      if (isLoggedUserParticipation)
+      if (isLoggedUserParticipation) {
         _loggedUserParticipations
             .removeWhere((element) => element.id == participation.id);
-      if (isLoggedUserParticipation)
         _loggedUserParticipations.add(participation);
+      }
 
       //_gameParticipations must stay sorted to allow the user to easily decide factions
       _gameParticipations.removeAt(index);
@@ -157,10 +157,21 @@ class GamesProvider extends ChangeNotifier {
         _loggedUserParticipations.add(tempParticipation);
       notifyListeners();
 
+      print(
+          '[GameProvider/editParticipation] added tempParticipation ${tempParticipation.asMap}');
+
       FirebaseHelper.addNewParticipation(participation).then((value) {
-        _gameParticipations.removeWhere((gp) => gp.id == tempId);
-        _gameParticipations.insert(0, participation);
-        if (isLoggedUserParticipation) _loggedUserParticipations.add(value);
+        final index = _gameParticipations.indexWhere((gp) => gp.id == tempId);
+        _gameParticipations.removeAt(index);
+        _gameParticipations.insert(index, value);
+
+        print(
+            '[GameProvider/editParticipation] added participation ${value.asMap}');
+
+        if (isLoggedUserParticipation) {
+          _loggedUserParticipations.removeWhere((gp) => gp.id == tempId);
+          _loggedUserParticipations.add(value);
+        }
         notifyListeners();
       });
     }

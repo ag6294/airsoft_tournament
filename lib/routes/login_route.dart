@@ -138,7 +138,9 @@ class _SignInFormState extends State<SignInForm> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: PasswordFormField(
-                        updatePwd1, <String>[AutofillHints.password]),
+                      updatePwd1,
+                      <String>[AutofillHints.password],
+                    ),
                   ),
                   if (isSigningUp)
                     Padding(

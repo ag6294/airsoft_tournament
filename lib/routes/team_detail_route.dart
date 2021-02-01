@@ -2,7 +2,8 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/team_edit_route.dart';
-import 'package:airsoft_tournament/routes/team_members.dart';
+import 'package:airsoft_tournament/routes/team_members_route.dart';
+import 'package:airsoft_tournament/routes/team_posts_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/detail_routes_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -183,6 +184,14 @@ class BottomButtons extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context)
+                        .pushNamed(TeamPostsRoute.routeName, arguments: team),
+                    child: Text('Bacheca del team'),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(

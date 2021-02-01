@@ -37,6 +37,7 @@ class LoginProvider extends ChangeNotifier {
       _loggedPlayer = await FirebaseHelper.userSignIn(email.toLowerCase(), pwd);
       await SharedPreferencesHelper.storeLoginData(email.toLowerCase(), pwd);
       await getAndSetLoggedPlayerTeam();
+      notifyListeners();
     } catch (e) {
       print(e);
       throw e;
@@ -50,7 +51,6 @@ class LoginProvider extends ChangeNotifier {
       _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
       print(
           '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
-      notifyListeners();
     }
   }
 

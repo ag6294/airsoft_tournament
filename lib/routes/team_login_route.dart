@@ -195,6 +195,7 @@ class __CustomFormState extends State<_CustomForm> {
                     GestureDetector(
                       onTap: () => setState(() {
                         isSigningUp = !isSigningUp;
+                        team = null;
                       }),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -213,7 +214,8 @@ class __CustomFormState extends State<_CustomForm> {
                   ),
                   child: ElevatedButton(
                     onPressed: () async {
-                      if (_formKey.currentState.validate()) {
+                      if (_formKey.currentState.validate() &&
+                          (team != null || isSigningUp)) {
                         _formKey.currentState.save();
                         setState(() {
                           _isLoading = true;

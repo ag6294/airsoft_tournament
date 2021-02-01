@@ -1,7 +1,7 @@
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/edit_game_route.dart';
-import 'package:airsoft_tournament/routes/game_detail.dart';
+import 'package:airsoft_tournament/routes/game_detail_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';

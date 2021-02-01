@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:airsoft_tournament/constants/exceptions.dart';
+import 'package:airsoft_tournament/models/team_post.dart';
 import 'package:path/path.dart' as ph;
 
 import 'package:airsoft_tournament/models/game.dart';
@@ -473,5 +474,67 @@ class FirebaseHelper {
 
   static bool isNetworkImage(String url) {
     return url == null ? false : url.contains('firebasestorage');
+  }
+
+  static Future<TeamPost> editTeamPost(TeamPost post) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final url = endPoint + '/posts/${post.id}.json?auth=$_authToken';
+
+    final body = json.encode(post.asMap);
+
+    print(
+        '[FirebaseHelper/editTeamPost] PATCH to ${url.substring(0, 20)}, body = $body');
+    final response = await http.patch(url, body: body);
+    print(
+        '[FirebaseHelper/editTeamPost] resolved to ${response.body.toString()}');
+
+    return post;
+  }
+
+  static Future<TeamPost> addTeamPost(TeamPost post) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/posts.json?auth=$_authToken';
+
+    final body = json.encode(post.asMap);
+
+    print(
+        '[FirebaseHelper/addTeamPost] POST to ${url.substring(0, 20)}, body = $body');
+    final response = await http.post(url, body: body);
+    print(
+        '[FirebaseHelper/addTeamPost] resolved to ${response.body.toString()}');
+
+    final id = json.decode(response.body)['name'];
+
+    url = endPoint + '/posts/$id.json?auth=$_authToken';
+
+    await http.patch(url, body: json.encode({'id': id}));
+
+    return TeamPost.fromMap(id, post.asMap);
+  }
+
+  static Future<List<TeamPost>> fetchTeamPosts(String teamId) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final url = endPoint +
+        '/posts.json?orderBy="teamId"&equalTo="$teamId"&auth=$_authToken';
+
+    print('[FirebaseHelper/fetchTeamPosts] GET to ${url.substring(0, 200)}');
+    final response = await http.get(url);
+    Map<String, dynamic> map = json.decode(response.body);
+
+    return map
+        .map((k, v) => MapEntry(k, TeamPost.fromMap(k, v)))
+        .values
+        .toList();
+  }
+
+  static Future<void> deletePost(TeamPost post) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    var url = endPoint + '/posts/${post.id}.json?auth=$_authToken';
+
+    print('[FirebaseHelper/deletePost] DELETE to $url');
+    var response = await http.delete(url);
+    print(
+        '[FirebaseHelper/deletePost]resolved to ${json.decode(response.body)}');
   }
 }
