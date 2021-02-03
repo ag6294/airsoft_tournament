@@ -4,6 +4,7 @@ import 'package:airsoft_tournament/widgets/forms/form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:airsoft_tournament/routes/privacy_route.dart';
 
 class LoginRoute extends StatelessWidget {
   static const routeName = '/login';
@@ -202,6 +203,16 @@ class _SignInFormState extends State<SignInForm> {
                       ),
                     ),
                   ),
+                  if (isSigningUp)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                        child: Text(
+                            'Registrandomi dichiaro di aver letto e aderisco alla Privacy Policy'),
+                        onTap: () => Navigator.of(context)
+                            .pushNamed(PrivacyRoute.routeName),
+                      ),
+                    )
                 ],
               ),
             ),
