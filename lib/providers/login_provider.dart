@@ -123,4 +123,12 @@ class LoginProvider extends ChangeNotifier {
     _loggedPlayerTeam = await FirebaseHelper.getTeamById(teamId);
     notifyListeners();
   }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await FirebaseHelper.resetPassword(email);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

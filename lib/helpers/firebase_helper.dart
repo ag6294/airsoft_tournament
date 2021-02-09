@@ -96,6 +96,15 @@ class FirebaseHelper {
     await _auth.signOut();
   }
 
+  static Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
+  }
+
   static Future<Team> createTeam({String name, String password}) async {
     final _authToken = await _auth.currentUser.getIdToken();
     final url = endPoint + '/teams.json?auth=$_authToken';

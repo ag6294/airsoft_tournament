@@ -51,7 +51,7 @@ class _SignInFormState extends State<SignInForm> {
       setState(() {
         isLoading = false;
       });
-      _showDialog(e.toString());
+      _showDialog('Errore', e.toString());
     }
   }
 
@@ -73,12 +73,12 @@ class _SignInFormState extends State<SignInForm> {
     nickname = newValue.trim();
   }
 
-  void _showDialog(String text) {
+  void _showDialog(String title, String text) {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Errore'),
+          title: Text(title),
           content: SingleChildScrollView(
             child: Text(text),
           ),
@@ -164,6 +164,42 @@ class _SignInFormState extends State<SignInForm> {
                       ),
                     ],
                   ),
+                  if (!isSigningUp)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            if (email != null && email != '') {
+                              setState(() {
+                                isLoading = true;
+                              });
+
+                              try {
+                                await Provider.of<LoginProvider>(context,
+                                        listen: false)
+                                    .resetPassword(email);
+                                _showDialog('Password resettata',
+                                    'Abbiamo inviato una mail per reimpostare la password. Segui le istruzioni che trovi nella mail e riprova');
+                              } on Exception catch (e) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                _showDialog('Errore', e.toString());
+                              }
+
+                              setState(() {
+                                isLoading = false;
+                              });
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('Ho dimenticato la pasword  :('),
+                          ),
+                        ),
+                      ],
+                    ),
                   Padding(
                     padding: EdgeInsets.only(
                       left: 8.0,
@@ -188,7 +224,7 @@ class _SignInFormState extends State<SignInForm> {
                             setState(() {
                               isLoading = false;
                             });
-                            _showDialog(e.toString());
+                            _showDialog('Errore', e.toString());
                           }
                           setState(() {
                             isLoading = false;
