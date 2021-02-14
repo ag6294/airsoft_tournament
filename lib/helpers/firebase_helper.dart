@@ -15,8 +15,8 @@ import 'dart:convert';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final FirebaseStorage _store = FirebaseStorage.instance;
 
-const endPoint = 'https://airsoft-tournament.firebaseio.com';
-// const endPoint = 'https://airsoft-tournament.firebaseio.com/DEV';
+// const endPoint = 'https://airsoft-tournament.firebaseio.com';
+const endPoint = 'https://airsoft-tournament.firebaseio.com/DEV';
 
 class FirebaseHelper {
   static Future<Player> userSignUp(email, password, nickname) async {
@@ -59,6 +59,51 @@ class FirebaseHelper {
       print(e);
       throw e;
     }
+  }
+
+  static Future<Player> updatePlayer(Player player) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final playersUrl = endPoint + '/players/${player.id}.json?auth=$_authToken';
+
+    final body = json.encode(player.asMap);
+
+    print(
+        '[FirebaseHelper/updatePlayer] PATCH to ${playersUrl.substring(0, 20)}, body = $body');
+    final response = await http.patch(playersUrl, body: body);
+    print(
+        '[FirebaseHelper/updatePlayer] resolved to ${response.body.toString()}');
+
+    final teamUrl = endPoint +
+        '/teams/${player.teamId}/players/${player.id}.json?auth=$_authToken';
+
+    print(
+        '[FirebaseHelper/updatePlayer] PATCH to ${teamUrl.substring(0, 20)}, body = $body');
+    final teamResponse = await http.patch(teamUrl, body: body);
+    print(
+        '[FirebaseHelper/updatePlayer] resolved to ${teamResponse.body.toString()}');
+
+    return player;
+  }
+
+  static Future<Player> addNewPlayer(Player player) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final playersUrl = endPoint + '/players.json?auth=$_authToken';
+
+    final body = json.encode(player.asMap);
+
+    print(
+        '[FirebaseHelper/addNewPlayer] POST to ${playersUrl.substring(0, 20)}, body = $body');
+    final response = await http.post(playersUrl, body: body);
+    print(
+        '[FirebaseHelper/addNewPlayer] resolved to ${response.body.toString()}');
+
+    final playerId = json.decode(response.body)['name'];
+    final url = endPoint + '/players/$playerId.json?auth=$_authToken';
+    print(
+        '[FirebaseHelper/addNewPlayer] PATCH to ${url.substring(0, 20)}, body = ${body}');
+    await http.patch(url, body: json.encode({'id': playerId}));
+
+    return Player.fromMap(playerId, player.asMap);
   }
 
   static Future<Player> userSignIn(email, password) async {

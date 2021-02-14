@@ -8,6 +8,7 @@ class GameParticipation {
   final String playerName;
   final bool isGoing;
   final String faction;
+  final bool isGuest;
 
   GameParticipation({
     @required this.id,
@@ -17,6 +18,7 @@ class GameParticipation {
     @required this.playerName,
     @required this.isGoing,
     this.faction,
+    this.isGuest = false,
   });
 
   GameParticipation.fromMap(String id, Map<String, dynamic> map)
@@ -26,7 +28,8 @@ class GameParticipation {
         this.playerId = map['playerId'],
         this.playerName = map['playerName'],
         this.isGoing = map['isGoing'],
-        this.faction = map['faction'];
+        this.faction = map['faction'],
+        this.isGuest = map['isGuest'] ?? false;
 
   Map<String, dynamic> get asMap => {
         'id': id,
@@ -36,5 +39,6 @@ class GameParticipation {
         'playerName': playerName,
         'isGoing': isGoing,
         'faction': faction,
+        'isGuest': isGuest,
       };
 }

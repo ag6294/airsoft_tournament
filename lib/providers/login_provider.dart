@@ -85,6 +85,31 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updatePlayer(Player player) async {
+    try {
+      var newPlayer = await FirebaseHelper.updatePlayer(player);
+
+      if (newPlayer.id == loggedPlayer.id) _loggedPlayer = newPlayer;
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
+
+    notifyListeners();
+  }
+
+  Future<Player> addNewPlayer(Player player) async {
+    Player newPlayer;
+    try {
+      newPlayer = await FirebaseHelper.addNewPlayer(player);
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
+
+    return newPlayer;
+  }
+
   Future<void> logOut() async {
     await SharedPreferencesHelper.logout();
     await FirebaseHelper.userLogout();

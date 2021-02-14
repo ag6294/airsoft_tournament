@@ -5,6 +5,7 @@ import 'package:airsoft_tournament/routes/game_detail_route.dart';
 import 'package:airsoft_tournament/routes/game_participations_route.dart';
 import 'package:airsoft_tournament/routes/home_route.dart';
 import 'package:airsoft_tournament/routes/login_route.dart';
+import 'package:airsoft_tournament/routes/player_edit_route.dart';
 import 'package:airsoft_tournament/routes/privacy_route.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/routes/team_edit_route.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
             TeamMembersRoute.routeName: (context) => TeamMembersRoute(),
             TeamPostsRoute.routeName: (context) => TeamPostsRoute(),
             PrivacyRoute.routeName: (context) => PrivacyRoute(),
+            PlayerEditRoute.routeName: (context) => PlayerEditRoute(),
           },
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:airsoft_tournament/constants/style.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
+import 'package:airsoft_tournament/routes/player_edit_route.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,12 @@ PopupMenuButton _settingsMenu(BuildContext context) {
                 .loggedPlayerTeam),
         child: Text('Impostazioni team'),
       ),
+    PopupMenuItem(
+      value: () => Navigator.pushNamed(context, PlayerEditRoute.routeName,
+          arguments:
+              Provider.of<LoginProvider>(context, listen: false).loggedPlayer),
+      child: Text('Modifica profilo utente'),
+    ),
   ];
 
   return PopupMenuButton<Function>(

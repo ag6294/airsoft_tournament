@@ -8,6 +8,8 @@ import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:airsoft_tournament/constants/exceptions.dart' as exc;
 
 const kFakeFactionId = 'asdfasdfsadf';
 
@@ -295,7 +297,7 @@ class _ModalBottomSheetButton extends StatelessWidget {
       onPressed: () => showModalBottomSheet(
         context: context,
         builder: (context) => BottomSheet(
-            onClosing: () {}, builder: (_) => _BottomSheetContent(game)),
+            onClosing: () {}, builder: (_) => _BottomSheetContent(game: game)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -310,79 +312,213 @@ class _ModalBottomSheetButton extends StatelessWidget {
 
 class _BottomSheetContent extends StatefulWidget {
   final Game game;
-  _BottomSheetContent(this.game);
+  final Player guestPlayer;
+  _BottomSheetContent({this.game, this.guestPlayer});
 
   @override
   __BottomSheetContentState createState() => __BottomSheetContentState();
 }
 
 class __BottomSheetContentState extends State<_BottomSheetContent> {
-  String hostName;
-  bool isLoading = false;
+  var _isLoading = false;
 
-  Future<void> _addHostParticipation() async {
-    setState(() {
-      isLoading = true;
-    });
+  final _formKey = GlobalKey<FormState>();
 
-    Provider.of<GamesProvider>(context, listen: false).editParticipation(
-        GameParticipation(
-            id: null,
-            gameId: widget.game.id,
-            gameName: widget.game.title,
-            playerId: DateTime.now().millisecondsSinceEpoch.toString(),
-            playerName: hostName,
-            isGoing: true),
-        false);
+  final TextEditingController _dateController = TextEditingController();
 
-    setState(() {
-      isLoading = false;
-    });
+  Player player;
+  var isNewPlayer = false;
 
-    Navigator.of(context).pop();
+  @override
+  void dispose() {
+    super.dispose();
+    _dateController.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (widget.guestPlayer == null) {
+      isNewPlayer = true;
+      player = Player(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        nickname: '',
+        email: '',
+        isGM: false,
+      );
+    } else {
+      player = widget.guestPlayer;
+      if (player.dateOfBirth != null) {
+        _dateController.text =
+            DateFormat('dd/MM/yyyy').format(player.dateOfBirth);
+      }
+    }
+  }
+
+  void _saveForm(BuildContext context) async {
+    if (_formKey.currentState.validate()) {
+      _formKey.currentState.save();
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        if (isNewPlayer) {
+          player = await Provider.of<LoginProvider>(context, listen: false)
+              .addNewPlayer(player);
+        } else {
+          await Provider.of<LoginProvider>(context, listen: false)
+              .updatePlayer(player);
+        }
+
+        Provider.of<GamesProvider>(context, listen: false).editParticipation(
+            GameParticipation(
+                id: null,
+                gameId: widget.game.id,
+                gameName: widget.game.title,
+                playerId: player.id,
+                playerName: player.name,
+                isGoing: true,
+                isGuest: true),
+            false);
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          exc.showCustomErrorDialog(context, e.toString());
+        });
+        throw (e);
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ModalProgressHUD(
       offset: Offset(MediaQuery.of(context).size.width / 2, 100),
-      inAsyncCall: isLoading,
-      child: Column(
-        // mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Hero(
-            tag: 'AddParticipant',
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Aggiungi un ospite',
-                style: kTitle,
-              ),
+      inAsyncCall: _isLoading,
+      child: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: SingleChildScrollView(
+            child: Column(
+              // mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Hero(
+                  tag: 'AddParticipant',
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Aggiungi un ospite',
+                      style: kTitle,
+                    ),
+                  ),
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Nickname',
+                    hintText: 'Inserisci il tuo nickname',
+                    hintStyle: kFormHint,
+                  ),
+                  initialValue: player.nickname,
+                  textInputAction: TextInputAction.next,
+                  onSaved: (value) {
+                    player.nickname = value;
+                  },
+                  validator: (value) => _validateText(value),
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Nome',
+                    hintText: 'Inserisci il tuo nome',
+                    hintStyle: kFormHint,
+                  ),
+                  initialValue: player.name,
+                  textInputAction: TextInputAction.next,
+                  onSaved: (value) {
+                    player.name = value;
+                  },
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Cognome',
+                    hintText: 'Inserisci il tuo cognome',
+                    hintStyle: kFormHint,
+                  ),
+                  initialValue: player.lastName,
+                  textInputAction: TextInputAction.next,
+                  onSaved: (value) {
+                    player.lastName = value;
+                  },
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Luogo di nascita',
+                    hintText: 'Inserisci il tuo luogo di nascita',
+                    hintStyle: kFormHint,
+                  ),
+                  initialValue: player.placeOfBirth,
+                  textInputAction: TextInputAction.next,
+                  onSaved: (value) {
+                    player.placeOfBirth = value;
+                  },
+                ),
+                TextFormField(
+                  // textInputAction: TextInputAction.done
+                  keyboardType: TextInputType.datetime,
+                  decoration: InputDecoration(
+                    labelText: 'Data di nascita',
+                    hintText: 'Inserisci il la tua data di nascita',
+                  ),
+                  controller: _dateController,
+                  validator: (value) => _validateText(value),
+                  onTap: () async {
+                    FocusScope.of(context).unfocus();
+                    DateTime date = player.dateOfBirth ?? DateTime(1970);
+
+                    date = await showDatePicker(
+                      context: context,
+                      initialDate: date,
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime(2100),
+                    );
+
+                    if (date != null) {
+                      _dateController.text =
+                          DateFormat('dd/MM/yyyy').format(date);
+
+                      player.dateOfBirth = date;
+                    }
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () => _saveForm(context),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                    child: Text('Conferma'),
+                  ),
+                ),
+              ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Nome ospite',
-              ),
-              onChanged: (value) => hostName = value,
-            ),
-          ),
-          ElevatedButton(
-            onPressed: _addHostParticipation,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('Conferma'),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-          )
-        ],
+        ),
       ),
     );
   }
+}
+
+String _validateText(String value) {
+  if (value == null || value == '')
+    return 'Compila questo campo!';
+  else
+    return null;
 }
