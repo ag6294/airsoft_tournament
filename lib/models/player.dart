@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 class Player {
   final String id;
@@ -45,4 +46,13 @@ class Player {
         'placeOfBirth': placeOfBirth,
         'dateOfBirth': dateOfBirth?.toIso8601String(),
       };
+
+  List<dynamic> get asRow => [
+        email,
+        nickname,
+        name,
+        lastName,
+        placeOfBirth,
+        dateOfBirth == null ? '' : DateFormat('dd/MM/yyyy').format(dateOfBirth),
+      ];
 }

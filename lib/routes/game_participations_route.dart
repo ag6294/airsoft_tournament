@@ -144,7 +144,10 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       persistentFooterButtons: loggedPlayer.isGM &&
               loggedPlayer.teamId.compareTo(game.hostTeamId) == 0 &&
               !isEditing
-          ? [_ModalBottomSheetButton(game)]
+          ? [
+              _ModalBottomSheetButton(game),
+              _ExportButton(game, loggedPlayer),
+            ]
           : null,
     );
   }
@@ -295,9 +298,9 @@ class _ModalBottomSheetButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () => showModalBottomSheet(
+        isScrollControlled: true,
         context: context,
-        builder: (context) => BottomSheet(
-            onClosing: () {}, builder: (_) => _BottomSheetContent(game: game)),
+        builder: (context) => _BottomSheetContent(game: game),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -407,111 +410,167 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
         key: _formKey,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: SingleChildScrollView(
-            child: Column(
-              // mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Hero(
-                  tag: 'AddParticipant',
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Aggiungi un ospite',
-                      style: kTitle,
-                    ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Hero(
+                tag: 'AddParticipant',
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Aggiungi un ospite',
+                    style: kTitle,
                   ),
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Nickname',
-                    hintText: 'Inserisci il tuo nickname',
-                    hintStyle: kFormHint,
-                  ),
-                  initialValue: player.nickname,
-                  textInputAction: TextInputAction.next,
-                  onSaved: (value) {
-                    player.nickname = value;
-                  },
-                  validator: (value) => _validateText(value),
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Nickname',
+                  hintText: 'Inserisci il tuo nickname',
+                  hintStyle: kFormHint,
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Nome',
-                    hintText: 'Inserisci il tuo nome',
-                    hintStyle: kFormHint,
-                  ),
-                  initialValue: player.name,
-                  textInputAction: TextInputAction.next,
-                  onSaved: (value) {
-                    player.name = value;
-                  },
+                initialValue: player.nickname,
+                textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  player.nickname = value;
+                },
+                validator: (value) => _validateText(value),
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Nome',
+                  hintText: 'Inserisci il tuo nome',
+                  hintStyle: kFormHint,
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Cognome',
-                    hintText: 'Inserisci il tuo cognome',
-                    hintStyle: kFormHint,
-                  ),
-                  initialValue: player.lastName,
-                  textInputAction: TextInputAction.next,
-                  onSaved: (value) {
-                    player.lastName = value;
-                  },
+                initialValue: player.name,
+                textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  player.name = value;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Cognome',
+                  hintText: 'Inserisci il tuo cognome',
+                  hintStyle: kFormHint,
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Luogo di nascita',
-                    hintText: 'Inserisci il tuo luogo di nascita',
-                    hintStyle: kFormHint,
-                  ),
-                  initialValue: player.placeOfBirth,
-                  textInputAction: TextInputAction.next,
-                  onSaved: (value) {
-                    player.placeOfBirth = value;
-                  },
+                initialValue: player.lastName,
+                textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  player.lastName = value;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Luogo di nascita',
+                  hintText: 'Inserisci il tuo luogo di nascita',
+                  hintStyle: kFormHint,
                 ),
-                TextFormField(
-                  // textInputAction: TextInputAction.done
-                  keyboardType: TextInputType.datetime,
-                  decoration: InputDecoration(
-                    labelText: 'Data di nascita',
-                    hintText: 'Inserisci il la tua data di nascita',
-                  ),
-                  controller: _dateController,
-                  validator: (value) => _validateText(value),
-                  onTap: () async {
-                    FocusScope.of(context).unfocus();
-                    DateTime date = player.dateOfBirth ?? DateTime(1970);
+                initialValue: player.placeOfBirth,
+                textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  player.placeOfBirth = value;
+                },
+              ),
+              TextFormField(
+                // textInputAction: TextInputAction.done
+                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(
+                  labelText: 'Data di nascita',
+                  hintText: 'Inserisci il la tua data di nascita',
+                ),
+                controller: _dateController,
+                validator: (value) => _validateText(value),
+                onTap: () async {
+                  FocusScope.of(context).unfocus();
+                  DateTime date = player.dateOfBirth ?? DateTime(1970);
 
-                    date = await showDatePicker(
-                      context: context,
-                      initialDate: date,
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime(2100),
-                    );
+                  date = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime(2100),
+                  );
 
-                    if (date != null) {
-                      _dateController.text =
-                          DateFormat('dd/MM/yyyy').format(date);
+                  if (date != null) {
+                    _dateController.text =
+                        DateFormat('dd/MM/yyyy').format(date);
 
-                      player.dateOfBirth = date;
-                    }
-                  },
-                ),
-                ElevatedButton(
+                    player.dateOfBirth = date;
+                  }
+                },
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: ElevatedButton(
                   onPressed: () => _saveForm(context),
                   child: Padding(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                    padding: const EdgeInsets.all(8.0),
                     child: Text('Conferma'),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ExportButton extends StatefulWidget {
+  final Game game;
+  final Player loggedPlayer;
+
+  _ExportButton(this.game, this.loggedPlayer);
+
+  @override
+  __ExportButtonState createState() => __ExportButtonState();
+}
+
+class __ExportButtonState extends State<_ExportButton> {
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () async {
+        setState(() {
+          isLoading = true;
+        });
+
+        try {
+          await Provider.of<GamesProvider>(context, listen: false)
+              .exportParticipations(widget.game, widget.loggedPlayer.email);
+          // Scaffold.of(context).showSnackBar(SnackBar(
+          //   content: Text(
+          //       'Abbiamo inviato la lista dei partecipanti al tuo indirizzo email'),
+          //   duration: Duration(seconds: 5),
+          // ));
+        } catch (e) {
+          setState(() {
+            isLoading = false;
+          });
+          exc.showCustomErrorDialog(context, e.toString());
+        }
+
+        setState(() {
+          isLoading = false;
+        });
+      },
+      child: isLoading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('Invia file .csv via mail'),
+            ),
     );
   }
 }

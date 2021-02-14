@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
+import 'package:airsoft_tournament/models/player.dart';
+import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class GamesProvider extends ChangeNotifier {
   List<Game> _games = [];
@@ -197,4 +203,50 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
     return newGame;
   }
+
+  Future<void> exportParticipations(Game game, String loggedPlayerEmail) async {
+    var participations = await FirebaseHelper.fetchGameParticipations(game.id);
+    List<Player> players = [];
+
+    for (GameParticipation element in participations) {
+      if (element.isGoing) {
+        final newPlayer = await FirebaseHelper.getPlayerById(element.playerId);
+        players.add(newPlayer);
+      }
+    }
+
+    final path = await getLocalPath();
+    final fileName =
+        'participations_${game.title}_${DateTime.now().millisecondsSinceEpoch}';
+    final filePath = '$path/$fileName.csv';
+    final file = await File(filePath).create();
+
+    final rows = players?.map((e) => e.asRow)?.toList();
+    rows?.insert(0, [
+      'email',
+      'nickname',
+      'name',
+      'lastName',
+      'placeOfBirth',
+      'dateOfBirth',
+    ]);
+
+    final csv = ListToCsvConverter().convert(rows);
+    file.writeAsString(csv);
+
+    final Email email = Email(
+      body: 'In allegato la lista dei presenti per la giocata ${game.title}',
+      subject: '${game.title} - presenze ${DateTime.now().toString()}',
+      recipients: [loggedPlayerEmail],
+      isHTML: true,
+      attachmentPaths: [filePath],
+    );
+
+    await FlutterEmailSender.send(email);
+  }
+}
+
+Future<String> getLocalPath() async {
+  final directory = await getApplicationSupportDirectory();
+  return directory.absolute.path;
 }

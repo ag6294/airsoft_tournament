@@ -106,6 +106,26 @@ class FirebaseHelper {
     return Player.fromMap(playerId, player.asMap);
   }
 
+  static Future<Player> getPlayerById(String id) async {
+    try {
+      final _authToken = await _auth.currentUser.getIdToken();
+      final url = endPoint + '/players/$id.json?auth=$_authToken';
+
+      print('[FirebaseHelper/getPlayerById] POST to ${url.substring(0, 100)},');
+
+      final response = await http.get(url);
+
+      print(
+          '[FirebaseHelper/getPlayerById] resolved to ${response.body.toString()}');
+      Map<String, dynamic> decodedResponse = json.decode(response.body);
+
+      return Player.fromMap(id, decodedResponse);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   static Future<Player> userSignIn(email, password) async {
     try {
       UserCredential uc = await _auth.signInWithEmailAndPassword(
