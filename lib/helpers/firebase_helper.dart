@@ -15,8 +15,8 @@ import 'dart:convert';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final FirebaseStorage _store = FirebaseStorage.instance;
 
-// const endPoint = 'https://airsoft-tournament.firebaseio.com';
-const endPoint = 'https://airsoft-tournament.firebaseio.com/DEV';
+const endPoint = 'https://airsoft-tournament.firebaseio.com';
+// const endPoint = 'https://airsoft-tournament.firebaseio.com/DEV';
 
 class FirebaseHelper {
   static Future<Player> userSignUp(email, password, nickname) async {
