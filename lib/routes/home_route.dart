@@ -77,7 +77,7 @@ PopupMenuButton _settingsMenu(BuildContext context) {
     onSelected: (value) {
       value.call();
     },
-    captureInheritedThemes: false,
+    //captureInheritedThemes: false,
     itemBuilder: (_) => itemsList,
     offset: Offset(0, 50),
   );
