@@ -111,7 +111,7 @@ class FirebaseHelper {
       final _authToken = await _auth.currentUser.getIdToken();
       final url = endPoint + '/players/$id.json?auth=$_authToken';
 
-      print('[FirebaseHelper/getPlayerById] POST to ${url.substring(0, 100)},');
+      print('[FirebaseHelper/getPlayerById] GET to ${url.substring(0, 100)},');
 
       final response = await http.get(url);
 

@@ -156,7 +156,6 @@ class _PlayerEditRouteState extends State<PlayerEditRoute> {
                       hintText: 'Inserisci il la tua data di nascita',
                     ),
                     controller: _dateController,
-                    validator: (value) => _validateText(value),
                     onTap: () async {
                       FocusScope.of(context).unfocus();
                       DateTime date = player.dateOfBirth ?? DateTime(1970);

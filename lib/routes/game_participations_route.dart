@@ -382,7 +382,7 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
                 gameId: widget.game.id,
                 gameName: widget.game.title,
                 playerId: player.id,
-                playerName: player.name,
+                playerName: player.nickname,
                 isGoing: true,
                 isGuest: true),
             false);
@@ -480,7 +480,7 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
                   hintText: 'Inserisci il la tua data di nascita',
                 ),
                 controller: _dateController,
-                validator: (value) => _validateText(value),
+
                 onTap: () async {
                   FocusScope.of(context).unfocus();
                   DateTime date = player.dateOfBirth ?? DateTime(1970);

@@ -215,12 +215,17 @@ class _EditGameRouteState extends State<EditGameRoute> {
                     },
                     validator: (value) => _validateText(value),
                   ),
+                  SizedBox(
+                    height: 12,
+                  ),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Descrizione',
                       hintText:
                           'Inserisci informazioni logistiche, il tipo di giocata, oppure lo storyboard di questa',
                       hintStyle: kFormHint,
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
                     initialValue: editedGame.description,

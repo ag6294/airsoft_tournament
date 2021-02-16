@@ -172,13 +172,34 @@ class _HomePageParticipationsState extends State<HomePageParticipations> {
                     label: 'Assenze'),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                child: Text('Vai alla lista delle partite'),
-                onPressed: () async {
-                  await Navigator.of(context).pushNamed(GamesRoute.routeName);
-                },
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      child: Text('Vai alla lista delle partite'),
+                      onPressed: () async {
+                        await Navigator.of(context)
+                            .pushNamed(GamesRoute.routeName);
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      child: Text('Vai alla pagina del team'),
+                      onPressed: () async =>
+                          await Navigator.of(context).pushNamed(
+                        TeamDetailRoute.routeName,
+                        arguments:
+                            Provider.of<LoginProvider>(context, listen: false)
+                                .loggedPlayerTeam,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
