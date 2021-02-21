@@ -49,7 +49,8 @@ class _HomeRouteState extends State<HomeRoute> {
 PopupMenuButton _settingsMenu(BuildContext context) {
   final itemsList = [
     PopupMenuItem(
-      value: () {
+      value: () async {
+        await Future.delayed(Duration(milliseconds: 500));
         Provider.of<GamesProvider>(context, listen: false).logOut();
         Provider.of<TeamsProvider>(context, listen: false).logOut();
         Provider.of<LoginProvider>(context, listen: false).logOut();

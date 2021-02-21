@@ -11,6 +11,7 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class GamesProvider extends ChangeNotifier {
   List<Game> _games = [];
+  List<Game> _filteredGames = [];
   List<GameParticipation> _loggedUserParticipations = [];
   List<GameParticipation> _gameParticipations = [];
 
@@ -29,6 +30,21 @@ class GamesProvider extends ChangeNotifier {
   }
 
   List<Game> get games => _games;
+  List<Game> get filteredGames => _filteredGames;
+
+  void filterGamesByTitleOrTeam(String query) {
+    if (query != null) {
+      _filteredGames = [
+        ..._games.where((element) =>
+            element.title.toLowerCase().contains(query) ||
+            element.hostTeamName.toLowerCase().contains(query))
+      ];
+    } else {
+      _filteredGames = List<Game>.from(_games);
+    }
+    notifyListeners();
+  }
+
   List<GameParticipation> get loggedUserParticipations =>
       _loggedUserParticipations;
   List<GameParticipation> get gameParticipations => _gameParticipations;
@@ -78,6 +94,7 @@ class GamesProvider extends ChangeNotifier {
       print(games);
 
       _games.sort((a, b) => b.date.compareTo(a.date));
+      filterGamesByTitleOrTeam(null);
       print('[GameProvider/fetchAndSetGames] ending');
 
       notifyListeners();

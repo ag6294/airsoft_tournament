@@ -18,6 +18,15 @@ class GamesRoute extends StatefulWidget {
 }
 
 class _GamesRouteState extends State<GamesRoute> {
+  bool isSearching = false;
+  final searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    searchController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final teamId =
@@ -39,13 +48,47 @@ class _GamesRouteState extends State<GamesRoute> {
               },
               child:
                   Consumer<GamesProvider>(builder: (context, gamesProvider, _) {
-                final list = Provider.of<GamesProvider>(context).games;
+                final list = Provider.of<GamesProvider>(context).filteredGames;
 
                 return CustomScrollView(
                   slivers: [
                     SliverAppBar(
-                      title: Center(child: Text('Le tue giocate')),
-                      actions: [_menuPopup(context)],
+                      title: isSearching
+                          ? TextField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                  hintText: 'Filtra per titolo o squadra'),
+                              onChanged: (value) => Provider.of<GamesProvider>(
+                                      context,
+                                      listen: false)
+                                  .filterGamesByTitleOrTeam(
+                                      value.toLowerCase()),
+                            )
+                          : Center(child: Text('Le tue giocate')),
+                      actions: [
+                        if (isSearching)
+                          IconButton(
+                            icon: Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                isSearching = false;
+                                searchController.clear();
+                                Provider.of<GamesProvider>(context,
+                                        listen: false)
+                                    .filterGamesByTitleOrTeam(null);
+                              });
+                            },
+                          ),
+                        if (!isSearching)
+                          IconButton(
+                              icon: Icon(Icons.search),
+                              onPressed: () {
+                                setState(() {
+                                  isSearching = true;
+                                });
+                              }),
+                        if (!isSearching) _menuPopup(context)
+                      ],
                       floating: true,
                     ),
                     SliverList(

@@ -56,7 +56,10 @@ class _TeamDropdownState extends State<TeamDropdown> {
     List<DropdownMenuItem<Team>> buttonItems = widget.teams.isNotEmpty
         ? widget.teams
             .map((e) => DropdownMenuItem<Team>(
-                  child: Text(e.name),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(e.name),
+                  ),
                   value: e,
                 ))
             .toList()
