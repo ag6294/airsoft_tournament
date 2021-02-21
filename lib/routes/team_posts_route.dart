@@ -11,7 +11,6 @@ import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
-import 'package:airsoft_tournament/helpers/form_helper.dart' as val;
 
 class TeamPostsRoute extends StatefulWidget {
   static const routeName = '/team/posts';

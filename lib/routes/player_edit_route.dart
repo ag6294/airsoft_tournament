@@ -1,20 +1,15 @@
-import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:airsoft_tournament/models/player.dart';
-import 'package:airsoft_tournament/models/team.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
-import 'package:airsoft_tournament/providers/team_provider.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:airsoft_tournament/constants/exceptions.dart' as exc;
-import 'package:airsoft_tournament/helpers/firebase_helper.dart' as fb;
 import 'dart:core';
 
 import 'package:airsoft_tournament/constants/style.dart';

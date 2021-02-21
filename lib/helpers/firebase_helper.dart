@@ -100,7 +100,7 @@ class FirebaseHelper {
     final playerId = json.decode(response.body)['name'];
     final url = endPoint + '/players/$playerId.json?auth=$_authToken';
     print(
-        '[FirebaseHelper/addNewPlayer] PATCH to ${url.substring(0, 20)}, body = ${body}');
+        '[FirebaseHelper/addNewPlayer] PATCH to ${url.substring(0, 20)}, body = $body');
     await http.patch(url, body: json.encode({'id': playerId}));
 
     return Player.fromMap(playerId, player.asMap);
