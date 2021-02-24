@@ -25,36 +25,23 @@ class FirebaseHelper {
         email: email,
         password: password,
       );
-      await uc.user.updateProfile(displayName: nickname);
-      User user = _auth.currentUser; //uc.user;
+
+      User user = _auth.currentUser;
       Player playerTemp = Player(
-          id: 'null',
-          email: user.email,
-          nickname: user.displayName,
-          isGM: false);
+          id: user.uid, email: user.email, nickname: nickname, isGM: false);
 
       var _authToken = await user.getIdToken();
-      var url = endPoint + '/players.json?auth=$_authToken';
+      var url = endPoint + '/players/${playerTemp.id}.json?auth=$_authToken';
+
+      final body = json.encode(playerTemp.asMap);
 
       print(
-          '[FirebaseHelper/userSignUp] POST to /players, body = ${playerTemp.asMap}');
-      final response =
-          await http.post(url, body: json.encode(playerTemp.asMap));
-
-      final playerId = json.decode(response.body)['name'];
-
-      url = endPoint + '/players/$playerId.json?auth=$_authToken';
+          '[FirebaseHelper/userSignUp] PUT to ${url.substring(0, 50)}, body = $body');
+      final response = await http.put(url, body: body);
       print(
-          '[FirebaseHelper/userSignUp] PATCH to /players, body = ${playerTemp.asMap}');
-      await http.patch(url, body: json.encode({'id': playerId}));
+          '[FirebaseHelper/userSignUp] resolved to ${response.body.toString()}');
 
-      return Player(
-        id: playerId,
-        nickname: playerTemp.nickname,
-        email: playerTemp.email,
-        isGM: playerTemp.isGM,
-        teamId: null,
-      );
+      return playerTemp;
     } on Exception catch (e) {
       print(e);
       throw e;
@@ -92,7 +79,7 @@ class FirebaseHelper {
     final body = json.encode(player.asMap);
 
     print(
-        '[FirebaseHelper/addNewPlayer] POST to ${playersUrl.substring(0, 20)}, body = $body');
+        '[FirebaseHelper/addNewPlayer] POST to ${playersUrl.substring(0, 50)}, body = $body');
     final response = await http.post(playersUrl, body: body);
     print(
         '[FirebaseHelper/addNewPlayer] resolved to ${response.body.toString()}');
@@ -135,11 +122,12 @@ class FirebaseHelper {
       User user = uc.user;
 
       final _authToken = await user.getIdToken();
-      final url = endPoint +
-          '/players.json?orderBy="email"&equalTo="$email"&auth=$_authToken';
+      final url = endPoint + '/players/${user.uid}.json?auth=$_authToken';
 
-      print('[FirebaseHelper/userSignIn] GET  /players where email : $email');
+      print('[FirebaseHelper/userSignIn] GET to ${url.substring(0, 20)}');
       final response = await http.get(url);
+      print(
+          '[FirebaseHelper/userSignIn] resolved to ${response.body.toString()}');
 
       print(url);
 
@@ -147,8 +135,7 @@ class FirebaseHelper {
 
       print(decodedResponse);
 
-      final player = Player.fromMap(
-          decodedResponse.keys.first, decodedResponse.values.first);
+      final player = Player.fromMap(user.uid, decodedResponse);
 
       return player;
     } on Exception catch (e) {

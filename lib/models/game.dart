@@ -31,7 +31,7 @@ class Game {
       @required this.isPrivate});
 
   Game.fromMap(String id, Map map)
-      : this.id = map['id'],
+      : this.id = id,
         this.title = map['title'],
         this.description = map['description'],
         this.place = map['place'],

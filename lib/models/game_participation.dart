@@ -32,7 +32,6 @@ class GameParticipation {
         this.isGuest = map['isGuest'] ?? false;
 
   Map<String, dynamic> get asMap => {
-        'id': id,
         'gameId': gameId,
         'gameName': gameName,
         'playerId': playerId,

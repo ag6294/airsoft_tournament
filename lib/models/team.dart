@@ -34,7 +34,6 @@ class Team {
         this.description = map['description'];
 
   Map<String, dynamic> get asMap => {
-        'id': id,
         'name': name,
         'players':
             Map.fromIterable(players, key: (p) => p.id, value: (p) => p.asMap),

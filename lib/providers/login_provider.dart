@@ -63,8 +63,8 @@ class LoginProvider extends ChangeNotifier {
       print(
           '[LoginProvider/tryAutoSignIn] User found in storage: ${loginMap['email']}');
       await trySignIn(loginMap['email'], loginMap['password']);
-    }
-    print('[LoginProvider/tryAutoSignIn] No user found in storage');
+    } else
+      print('[LoginProvider/tryAutoSignIn] No user found in storage');
   }
 
   Future<void> trySignUp(String email, String pwd, String nickname) async {
@@ -90,6 +90,7 @@ class LoginProvider extends ChangeNotifier {
       var newPlayer = await FirebaseHelper.updatePlayer(player);
 
       if (newPlayer.id == loggedPlayer.id) _loggedPlayer = newPlayer;
+      notifyListeners();
     } catch (e) {
       print(e);
       rethrow;

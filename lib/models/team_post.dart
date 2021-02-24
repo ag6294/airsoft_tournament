@@ -23,7 +23,6 @@ class TeamPost {
       this.teamName});
 
   Map<String, dynamic> get asMap => {
-        'id': id,
         'title': title,
         'description': description,
         'creationDate': creationDate.toIso8601String(),
