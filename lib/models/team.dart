@@ -20,19 +20,15 @@ class Team {
     this.description,
   });
 
-  Team.fromMap(String id, Map<String, dynamic> map)
+  Team.fromMap(String id, Map<String, dynamic> map, List<Player> members)
       : this.id = id,
         this.name = map['name'],
         this.password = map['password'],
-        this.players = map['players'] != null
-            ? List<Player>.from(map['players']
-                .map((k, v) => MapEntry(k, Player.fromMap(k, v)))
-                .values)
-            : [],
+        this.players = members ?? [],
         this.imageUrl = map['imageUrl'],
         this.contacts = map['contacts'],
         this.description = map['description'];
-
+//todo remove players to map, and delete it from db
   Map<String, dynamic> get asMap => {
         'name': name,
         'players':

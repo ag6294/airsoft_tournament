@@ -1,13 +1,18 @@
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
+import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/models/team_post.dart';
 import 'package:flutter/foundation.dart';
 
 class TeamsProvider extends ChangeNotifier {
   List<TeamPost> _posts = [];
+  List<Player> _members = [];
 
   List<TeamPost> get posts => List<TeamPost>.from(
       _posts..sort((a, b) => a.creationDate.compareTo(b.creationDate)));
+
+  List<Player> get members => List<Player>.from(
+      _members..sort((a, b) => a.nickname.compareTo(b.nickname)));
 
   Future<List<Team>> fetchTeams() async {
     List<Team> teams = [];
@@ -35,6 +40,7 @@ class TeamsProvider extends ChangeNotifier {
 
   void logOut() {
     _posts = [];
+    _members = [];
   }
 
   Future<void> fetchAndSetPosts(String teamId, bool isLoggedPlayerTeam) async {
@@ -64,6 +70,20 @@ class TeamsProvider extends ChangeNotifier {
     FirebaseHelper.deletePost(post);
     _posts.removeWhere((element) => element.id.compareTo(post.id) == 0);
 
+    notifyListeners();
+  }
+
+  Future<void> fetchAndSetMembers(String teamId) async {
+    _members = await FirebaseHelper.fetchTeamMembers(teamId);
+    notifyListeners();
+  }
+
+  Future<void> updateTeamMember(Player player) async {
+    FirebaseHelper.updatePlayer(player);
+
+    final index = _members.indexWhere((element) => element.id == player.id);
+    _members.removeAt(index);
+    _members.insert(index, player);
     notifyListeners();
   }
 }

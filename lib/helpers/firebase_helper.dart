@@ -55,16 +55,17 @@ class FirebaseHelper {
     final body = json.encode(player.asMap);
 
     print(
-        '[FirebaseHelper/updatePlayer] PATCH to ${playersUrl.substring(0, 20)}, body = $body');
+        '[FirebaseHelper/updatePlayer] PATCH to ${playersUrl.substring(0, 200)}, body = $body');
     final response = await http.patch(playersUrl, body: body);
     print(
         '[FirebaseHelper/updatePlayer] resolved to ${response.body.toString()}');
 
+    //todo remove team update
     final teamUrl = endPoint +
         '/teams/${player.teamId}/players/${player.id}.json?auth=$_authToken';
 
     print(
-        '[FirebaseHelper/updatePlayer] PATCH to ${teamUrl.substring(0, 20)}, body = $body');
+        '[FirebaseHelper/updatePlayer] PATCH to ${teamUrl.substring(0, 200)}, body = $body');
     final teamResponse = await http.patch(teamUrl, body: body);
     print(
         '[FirebaseHelper/updatePlayer] resolved to ${teamResponse.body.toString()}');
@@ -256,7 +257,7 @@ class FirebaseHelper {
 
       return decodedResponse != null
           ? decodedResponse
-              .map((key, value) => MapEntry(key, Team.fromMap(key, value)))
+              .map((key, value) => MapEntry(key, Team.fromMap(key, value, [])))
               .values
               .toList()
           : [];
@@ -277,10 +278,36 @@ class FirebaseHelper {
 
       print('[FirebaseHelper/getTeamById] resolved in $decodedResponse');
 
-      return Team.fromMap(id, decodedResponse);
+      final players = await fetchTeamMembers(id);
+
+      return Team.fromMap(id, decodedResponse, players);
     } catch (e) {
       print(e);
       throw e;
+    }
+  }
+
+  static Future<List<Player>> fetchTeamMembers(String teamId) async {
+    try {
+      final _authToken = await _auth.currentUser.getIdToken();
+
+      final url = endPoint +
+          '/players.json?orderBy="teamId"&equalTo="$teamId"&auth=$_authToken';
+
+      print(
+          '[FirebaseHelper/fetchTeamMembers] GET to ${url.substring(0, 200)}');
+      final response = await http.get(url);
+      print(
+          '[FirebaseHelper/fetchTeamMembers] resolved to ${response.body.toString()}');
+      Map<String, dynamic> map = json.decode(response.body);
+
+      return map
+          .map((key, value) => MapEntry(key, Player.fromMap(key, value)))
+          .values
+          .toList();
+    } on Exception catch (e) {
+      print(e);
+      rethrow;
     }
   }
 
