@@ -80,7 +80,7 @@ PopupMenuButton _settingsMenu(BuildContext context) {
     },
     //captureInheritedThemes: false,
     itemBuilder: (_) => itemsList,
-    offset: Offset(0, 50),
+    // offset: Offset(0, 50),
   );
 }
 

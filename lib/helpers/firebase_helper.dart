@@ -15,8 +15,9 @@ import 'dart:convert';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final FirebaseStorage _store = FirebaseStorage.instance;
 
-const endPoint = 'https://airsoft-tournament.firebaseio.com';
+// const endPoint = 'https://airsoft-tournament.firebaseio.com';
 // const endPoint = 'https://airsoft-tournament.firebaseio.com/DEV';
+const authority = 'airsoft-tournament.firebaseio.com';
 
 class FirebaseHelper {
   static Future<Player> userSignUp(email, password, nickname) async {
@@ -31,13 +32,18 @@ class FirebaseHelper {
           id: user.uid, email: user.email, nickname: nickname, isGM: false);
 
       var _authToken = await user.getIdToken();
-      var url = endPoint + '/players/${playerTemp.id}.json?auth=$_authToken';
+
+      var path = '/players/${playerTemp.id}.json';
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
 
       final body = json.encode(playerTemp.asMap);
 
       print(
-          '[FirebaseHelper/userSignUp] PUT to ${url.substring(0, 50)}, body = $body');
-      final response = await http.put(url, body: body);
+          '[FirebaseHelper/userSignUp] PUT to ${uri.toString().substring(0, 50)}, body = $body');
+      final response = await http.put(uri, body: body);
       print(
           '[FirebaseHelper/userSignUp] resolved to ${response.body.toString()}');
 
@@ -50,23 +56,31 @@ class FirebaseHelper {
 
   static Future<Player> updatePlayer(Player player) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final playersUrl = endPoint + '/players/${player.id}.json?auth=$_authToken';
+
+    var path = '/players/${player.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
 
     final body = json.encode(player.asMap);
 
     print(
-        '[FirebaseHelper/updatePlayer] PATCH to ${playersUrl.substring(0, 200)}, body = $body');
-    final response = await http.patch(playersUrl, body: body);
+        '[FirebaseHelper/updatePlayer] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.patch(uri, body: body);
     print(
         '[FirebaseHelper/updatePlayer] resolved to ${response.body.toString()}');
 
     //todo remove team update
-    final teamUrl = endPoint +
-        '/teams/${player.teamId}/players/${player.id}.json?auth=$_authToken';
+    path = '/teams/${player.teamId}/players/${player.id}.json';
+    params = {
+      'auth': _authToken,
+    };
+    uri = Uri.https(authority, path, params);
 
     print(
-        '[FirebaseHelper/updatePlayer] PATCH to ${teamUrl.substring(0, 200)}, body = $body');
-    final teamResponse = await http.patch(teamUrl, body: body);
+        '[FirebaseHelper/updatePlayer] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    final teamResponse = await http.patch(uri, body: body);
     print(
         '[FirebaseHelper/updatePlayer] resolved to ${teamResponse.body.toString()}');
 
@@ -75,21 +89,31 @@ class FirebaseHelper {
 
   static Future<Player> addNewPlayer(Player player) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final playersUrl = endPoint + '/players.json?auth=$_authToken';
 
+    var path = '/players.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     final body = json.encode(player.asMap);
 
     print(
-        '[FirebaseHelper/addNewPlayer] POST to ${playersUrl.substring(0, 50)}, body = $body');
-    final response = await http.post(playersUrl, body: body);
+        '[FirebaseHelper/addNewPlayer] POST to ${uri.toString().substring(0, 50)}, body = $body');
+    final response = await http.post(uri, body: body);
     print(
         '[FirebaseHelper/addNewPlayer] resolved to ${response.body.toString()}');
 
     final playerId = json.decode(response.body)['name'];
-    final url = endPoint + '/players/$playerId.json?auth=$_authToken';
-    print(
-        '[FirebaseHelper/addNewPlayer] PATCH to ${url.substring(0, 20)}, body = $body');
-    await http.patch(url, body: json.encode({'id': playerId}));
+
+    // path = '/players/$playerId.json';
+    // params = {
+    //   'auth': _authToken,
+    // };
+    // var uri = Uri.https(authority, path, params);
+    //
+    // print(
+    //     '[FirebaseHelper/addNewPlayer] PATCH to ${url.substring(0, 20)}, body = $body');
+    // await http.patch(uri, body: json.encode({'id': playerId}));
 
     return Player.fromMap(playerId, player.asMap);
   }
@@ -97,11 +121,17 @@ class FirebaseHelper {
   static Future<Player> getPlayerById(String id) async {
     try {
       final _authToken = await _auth.currentUser.getIdToken();
-      final url = endPoint + '/players/$id.json?auth=$_authToken';
 
-      print('[FirebaseHelper/getPlayerById] GET to ${url.substring(0, 100)},');
+      var path = '/players/$id.json';
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
 
-      final response = await http.get(url);
+      print(
+          '[FirebaseHelper/getPlayerById] GET to ${uri.toString().substring(0, 100)},');
+
+      final response = await http.get(uri);
 
       print(
           '[FirebaseHelper/getPlayerById] resolved to ${response.body.toString()}');
@@ -123,18 +153,20 @@ class FirebaseHelper {
       User user = uc.user;
 
       final _authToken = await user.getIdToken();
-      final url = endPoint + '/players/${user.uid}.json?auth=$_authToken';
 
-      print('[FirebaseHelper/userSignIn] GET to ${url.substring(0, 20)}');
-      final response = await http.get(url);
+      var path = '/players/${user.uid}.json';
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/userSignIn] GET to ${uri.toString().substring(0, 20)}');
+      final response = await http.get(uri);
       print(
           '[FirebaseHelper/userSignIn] resolved to ${response.body.toString()}');
 
-      print(url);
-
       final decodedResponse = json.decode(response.body);
-
-      print(decodedResponse);
 
       final player = Player.fromMap(user.uid, decodedResponse);
 
@@ -160,18 +192,24 @@ class FirebaseHelper {
 
   static Future<Team> createTeam({String name, String password}) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint + '/teams.json?auth=$_authToken';
+
+    var path = '/teams.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
 
     print(
-        '[FirebaseHelper/userSignUp] POST to /teams, body = name : $name, password : $password ');
-    var response = await http.post(url,
+        '[FirebaseHelper/createTeam] GET to ${uri.toString().substring(0, 200)}');
+
+    var response = await http.post(uri,
         body: json.encode({
           'name': name,
           'password': password,
         }));
 
     print(
-        '[FirebaseHelper/userSignUp] POST to /teams resolved in ${response.body}');
+        '[FirebaseHelper/createTeam] resolved to ${response.body.toString()}');
 
     return Team(
         id: json.decode(response.body)['name'],
@@ -182,7 +220,12 @@ class FirebaseHelper {
 
   static Future<Team> editTeam(Team team, String oldImageUrl) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/teams/${team.id}.json?auth=$_authToken';
+
+    var path = '/teams/${team.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     String imageUrl;
 
     try {
@@ -202,7 +245,8 @@ class FirebaseHelper {
       } else
         imageUrl = team.imageUrl;
 
-      print('[FirebaseHelper/editTeam] PATCH to /teams, id : ${team.id}');
+      print(
+          '[FirebaseHelper/updateTeam] GET to ${uri.toString().substring(0, 200)}');
 
       final uploadedTeam = Team(
         id: team.id,
@@ -214,7 +258,7 @@ class FirebaseHelper {
         contacts: team.contacts,
       );
 
-      await http.patch(url, body: json.encode(uploadedTeam.asMap));
+      await http.patch(uri, body: json.encode(uploadedTeam.asMap));
 
       return uploadedTeam;
     } catch (e) {
@@ -226,16 +270,25 @@ class FirebaseHelper {
   static Future<Player> addCurrentPlayerToTeam(
       String teamId, Player loggedPlayer) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/teams/$teamId/players.json?auth=$_authToken';
 
+    //todo remove team update
+    var path = '/teams/$teamId/players.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     print(
         '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: $teamId ');
 
-    await http.patch(url,
+    await http.patch(uri,
         body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
 
-    url = endPoint + '/players/${loggedPlayer.id}.json?auth=$_authToken';
-    await http.patch(url,
+    path = '/players/${loggedPlayer.id}.json';
+    params = {
+      'auth': _authToken,
+    };
+    uri = Uri.https(authority, path, params);
+    await http.patch(uri,
         body: json.encode({'teamId': teamId, 'isGM': loggedPlayer.isGM}));
 
     return Player(
@@ -250,9 +303,13 @@ class FirebaseHelper {
   static Future<List<Team>> fetchTeams() async {
     try {
       final _authToken = await _auth.currentUser.getIdToken();
-      final url = endPoint + '/teams.json?auth=$_authToken';
+      final path = '/teams.json';
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
 
-      final response = await http.get(url);
+      final response = await http.get(uri);
       Map<String, dynamic> decodedResponse = json.decode(response.body);
 
       return decodedResponse != null
@@ -270,10 +327,15 @@ class FirebaseHelper {
   static Future<Team> getTeamById(String id) async {
     try {
       final _authToken = await _auth.currentUser.getIdToken();
-      final url = endPoint + '/teams/$id.json?auth=$_authToken';
+      final path = '/teams/$id.json';
+
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
 
       print('[FirebaseHelper/getTeamById] GET /teams, id: $id');
-      final response = await http.get(url);
+      final response = await http.get(uri);
       Map<String, dynamic> decodedResponse = json.decode(response.body);
 
       print('[FirebaseHelper/getTeamById] resolved in $decodedResponse');
@@ -291,12 +353,17 @@ class FirebaseHelper {
     try {
       final _authToken = await _auth.currentUser.getIdToken();
 
-      final url = endPoint +
-          '/players.json?orderBy="teamId"&equalTo="$teamId"&auth=$_authToken';
+      final path = '/players.json';
+      var params = {
+        'orderBy': '\"teamId\"',
+        'equalTo': '\"$teamId\"',
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
 
       print(
-          '[FirebaseHelper/fetchTeamMembers] GET to ${url.substring(0, 200)}');
-      final response = await http.get(url);
+          '[FirebaseHelper/fetchTeamMembers] GET to ${uri.toString().substring(0, 200)}');
+      final response = await http.get(uri);
       print(
           '[FirebaseHelper/fetchTeamMembers] resolved to ${response.body.toString()}');
       Map<String, dynamic> map = json.decode(response.body);
@@ -314,18 +381,23 @@ class FirebaseHelper {
   static Future<Game> addGame(Game game) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
-    String url;
     String body;
+    String path;
+    Map<String, dynamic> params;
 
     String gameId;
 
     try {
-      url = endPoint + '/games.json?auth=$_authToken';
+      path = '/games.json';
+      var params = {
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
       body = json.encode(game.asMap);
 
       print(
-          '[FirebaseHelper/addGame] POST to ${url.substring(0, 20)}, body = $body');
-      final response = await http.post(url, body: body);
+          '[FirebaseHelper/addGame] POST to ${uri.toString().substring(0, 20)}, body = $body');
+      final response = await http.post(uri, body: body);
       gameId = json.decode(response.body)['name'];
       print('[FirebaseHelper/addGame] resolved to ${response.body.toString()}');
     } catch (e) {
@@ -364,12 +436,16 @@ class FirebaseHelper {
       isPrivate: game.isPrivate,
     );
 
-    url = endPoint + '/games/$gameId.json?auth=$_authToken';
+    path = '/games/$gameId.json';
+    params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     body = json.encode(uploadedGame.asMap);
 
     print(
-        '[FirebaseHelper/addGame] PATCH to ${url.substring(0, 20)}, body = $body');
-    final response = await http.patch(url, body: body);
+        '[FirebaseHelper/addGame] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.patch(uri, body: body);
     print('[FirebaseHelper/addGame] resolved to ${response.body.toString()}');
 
     return uploadedGame;
@@ -377,13 +453,19 @@ class FirebaseHelper {
 
   static Future<List<Game>> fetchGamesForTeam(String teamId) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint +
-        '/games.json?orderBy="hostTeamId"&equalTo="$teamId"&auth=$_authToken';
+
+    final path = '/games.json';
+    var params = {
+      'auth': _authToken,
+      'orderBy': '\"hostTeamId\"',
+      'equalTo': '\"$teamId\"',
+    };
+    var uri = Uri.https(authority, path, params);
 
     print(
         '[FirebaseHelper/fetchGamesForTeam] GET  /games where hostTeamId : $teamId');
 
-    final response = await http.get(url);
+    final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
 
     print('[FirebaseHelper/fetchGamesForTeam] GET  /games resolved to $map');
@@ -395,13 +477,18 @@ class FirebaseHelper {
     final _authToken = await _auth.currentUser.getIdToken();
     final dataString =
         DateTime.now().subtract(Duration(days: 7)).toIso8601String();
-    final url = endPoint +
-        '/games.json?orderBy="date"&start at="$dataString"&auth=$_authToken';
 
+    final path = '/games.json';
+    var params = {
+      'auth': _authToken,
+      'orderBy': '\"date\"',
+      'startAt': '\"$dataString\"',
+    };
+    var uri = Uri.https(authority, path, params);
     print(
         '[FirebaseHelper/fetchFutureGames] GET  /games where date < $dataString - 7 days');
 
-    final response = await http.get(url);
+    final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
 
     print('[FirebaseHelper/fetchFutureGames] GET  /games resolved to $map');
@@ -412,13 +499,19 @@ class FirebaseHelper {
   static Future<List<GameParticipation>> fetchUserParticipations(
       String playerId) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint +
-        '/participations.json?orderBy="playerId"&equalTo="$playerId"&auth=$_authToken';
+
+    final path = '/participations.json';
+    var params = {
+      'auth': _authToken,
+      'orderBy': '\"playerId\"',
+      'equalTo': '\"$playerId\"',
+    };
+    var uri = Uri.https(authority, path, params);
 
     print(
         '[FirebaseHelper/participations] GET  /participations where playerId : $playerId');
 
-    final response = await http.get(url);
+    final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
 
     print(
@@ -433,13 +526,18 @@ class FirebaseHelper {
   static Future<List<GameParticipation>> fetchGameParticipations(
       String gameId) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint +
-        '/participations.json?orderBy="gameId"&equalTo="$gameId"&auth=$_authToken';
 
+    final path = '/participations.json';
+    var params = {
+      'auth': _authToken,
+      'orderBy': '\"gameId\"',
+      'equalTo': '\"$gameId\"',
+    };
+    var uri = Uri.https(authority, path, params);
     print(
         '[FirebaseHelper/fetchGameParticipations] GET  /participations where gameId : $gameId');
 
-    final response = await http.get(url);
+    final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
 
     print(
@@ -453,44 +551,61 @@ class FirebaseHelper {
 
   static editParticipation(GameParticipation participation) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url =
-        endPoint + '/participations/${participation.id}.json?auth=$_authToken';
+
+    final path = '/participations/${participation.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
 
     print(
         '[FirebaseHelper/editParticipation] PATCH to /participations, body = ${participation.asMap}');
 
-    await http.patch(url, body: json.encode(participation.asMap));
+    await http.patch(uri, body: json.encode(participation.asMap));
 
     return participation;
   }
 
   static addNewParticipation(GameParticipation participation) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/participations.json?auth=$_authToken';
+
+    var path = '/participations.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
 
     print(
         '[FirebaseHelper/addNewParticipation] POST to /participations, body = ${participation.asMap}');
     final response =
-        await http.post(url, body: json.encode(participation.asMap));
+        await http.post(uri, body: json.encode(participation.asMap));
 
     print(
         '[FirebaseHelper/addNewParticipation] POST to /participations, resolved in ${json.decode(response.body)}');
 
     final id = json.decode(response.body)['name'];
 
-    url = endPoint + '/participations/$id.json?auth=$_authToken';
+    path = '/participations/$id.json';
+    params = {
+      'auth': _authToken,
+    };
+    uri = Uri.https(authority, path, params);
 
-    await http.patch(url, body: json.encode({'id': id}));
+    await http.patch(uri, body: json.encode({'id': id}));
 
     return GameParticipation.fromMap(id, participation.asMap);
   }
 
   static Future<void> deleteGame(Game game) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/games/${game.id}.json?auth=$_authToken';
+    var path = '/games/${game.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
 
     print('[FirebaseHelper/deleteGame] DELETE to /games, id : ${game.id}');
-    var response = await http.delete(url);
+    var response = await http.delete(uri);
     print(
         '[FirebaseHelper/deleteGame] DELETE to /games, resolved in ${json.decode(response.body)}');
 
@@ -498,18 +613,29 @@ class FirebaseHelper {
         '[FirebaseHelper/deleteGame] Removing image from storage : ${game.imageUrl}');
     await _store.refFromURL(game.imageUrl).delete();
 
-    url = endPoint +
-        '/participations.json?orderBy="gameId"&equalTo="${game.id}"&auth=$_authToken';
+    path = '/participations.json?';
+    params = {
+      'auth': _authToken,
+      'orderBy': '\"gameId\"',
+      'equalTo': '\"${game.id}\"',
+    };
+    uri = Uri.https(authority, path, params);
 
-    print('[FirebaseHelper/deleteGame] DELETE to /participations, url : $url');
-    response = await http.delete(url);
+    print(
+        '[FirebaseHelper/deleteGame] DELETE to /participations, url : ${uri.toString().substring(0, 200)}');
+    response = await http.delete(uri);
     print(
         '[FirebaseHelper/deleteGame] DELETE to /participations, resolved in ${json.decode(response.body)}');
   }
 
   static Future<Game> editGame(Game game, String oldImageUrl) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/games/${game.id}.json?auth=$_authToken';
+    var path = '/games/${game.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+
     String imageUrl;
 
     try {
@@ -546,7 +672,7 @@ class FirebaseHelper {
         factions: game.factions,
       );
 
-      await http.patch(url, body: json.encode(uploadedGame.asMap));
+      await http.patch(uri, body: json.encode(uploadedGame.asMap));
 
       return uploadedGame;
     } catch (e) {
@@ -566,13 +692,17 @@ class FirebaseHelper {
 
   static Future<TeamPost> editTeamPost(TeamPost post) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    final url = endPoint + '/posts/${post.id}.json?auth=$_authToken';
-
+    final path = '/posts/${post.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     final body = json.encode(post.asMap);
 
     print(
-        '[FirebaseHelper/editTeamPost] PATCH to ${url.substring(0, 20)}, body = $body');
-    final response = await http.patch(url, body: body);
+        '[FirebaseHelper/editTeamPost] PATCH to ${uri.toString().substring(0, 20)}, body = $body');
+    final response = await http.patch(uri, body: body);
+
     print(
         '[FirebaseHelper/editTeamPost] resolved to ${response.body.toString()}');
 
@@ -581,21 +711,25 @@ class FirebaseHelper {
 
   static Future<TeamPost> addTeamPost(TeamPost post) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/posts.json?auth=$_authToken';
 
+    final path = '/posts.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
     final body = json.encode(post.asMap);
 
     print(
-        '[FirebaseHelper/addTeamPost] POST to ${url.substring(0, 20)}, body = $body');
-    final response = await http.post(url, body: body);
+        '[FirebaseHelper/addTeamPost] POST to ${uri.toString().substring(0, 20)}, body = $body');
+    final response = await http.post(uri, body: body);
     print(
         '[FirebaseHelper/addTeamPost] resolved to ${response.body.toString()}');
 
     final id = json.decode(response.body)['name'];
 
-    url = endPoint + '/posts/$id.json?auth=$_authToken';
-
-    await http.patch(url, body: json.encode({'id': id}));
+    // url = endPoint + '/posts/$id.json?auth=$_authToken';
+    // uri = Uri.dataFromString(url);
+    // await http.patch(uri, body: json.encode({'id': id}));
 
     return TeamPost.fromMap(id, post.asMap);
   }
@@ -603,11 +737,17 @@ class FirebaseHelper {
   static Future<List<TeamPost>> fetchTeamPosts(String teamId) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
-    final url = endPoint +
-        '/posts.json?orderBy="teamId"&equalTo="$teamId"&auth=$_authToken';
+    final path = '/posts.json';
+    var params = {
+      'auth': _authToken,
+      'orderBy': '\"teamId\"',
+      'equalTo': '\"$teamId\"',
+    };
+    var uri = Uri.https(authority, path, params);
 
-    print('[FirebaseHelper/fetchTeamPosts] GET to ${url.substring(0, 200)}');
-    final response = await http.get(url);
+    print(
+        '[FirebaseHelper/fetchTeamPosts] GET to ${uri.toString().substring(0, 200)}');
+    final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
 
     return map
@@ -618,10 +758,16 @@ class FirebaseHelper {
 
   static Future<void> deletePost(TeamPost post) async {
     final _authToken = await _auth.currentUser.getIdToken();
-    var url = endPoint + '/posts/${post.id}.json?auth=$_authToken';
 
-    print('[FirebaseHelper/deletePost] DELETE to $url');
-    var response = await http.delete(url);
+    final path = '/posts/${post.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+
+    print(
+        '[FirebaseHelper/deletePost] DELETE to ${uri.toString().substring(0, 200)}');
+    var response = await http.delete(uri);
     print(
         '[FirebaseHelper/deletePost]resolved to ${json.decode(response.body)}');
   }

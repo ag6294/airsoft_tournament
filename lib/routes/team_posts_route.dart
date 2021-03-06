@@ -218,9 +218,8 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
             height: 200, child: Center(child: CircularProgressIndicator()))
         : Form(
             key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
+            child: ListView(
+              shrinkWrap: true,
               children: [
                 Hero(
                   tag: 'AddPost',
@@ -258,44 +257,40 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
                     validator: FormHelper.validateGenericText,
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(post.isPrivate
-                                  ? 'Post privato'
-                                  : 'Post pubblico'),
-                            ),
-                            Switch(
-                              value: !post.isPrivate,
-                              onChanged: (_) {
-                                setState(() {
-                                  post.isPrivate = !post.isPrivate;
-                                });
-                              },
-                            )
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ElevatedButton(
-                          onPressed: _addPost,
-                          child: Padding(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text('Conferma'),
+                            child: Text(post.isPrivate
+                                ? 'Post privato'
+                                : 'Post pubblico'),
                           ),
+                          Switch(
+                            value: !post.isPrivate,
+                            onChanged: (_) {
+                              setState(() {
+                                post.isPrivate = !post.isPrivate;
+                              });
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: _addPost,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Conferma'),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),

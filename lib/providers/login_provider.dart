@@ -26,7 +26,7 @@ class LoginProvider extends ChangeNotifier {
   Player get loggedPlayer => _loggedPlayer;
 
   Team get loggedPlayerTeam {
-    print('loggedPlayerTeam = ${_loggedPlayerTeam.asMap}');
+    // print('loggedPlayerTeam = ${_loggedPlayerTeam.asMap}');
     return _loggedPlayerTeam;
   }
 
@@ -49,8 +49,8 @@ class LoginProvider extends ChangeNotifier {
         '[LoginProvider/getAndSetLoggedPlayerTeam] get team ${_loggedPlayer.teamId}');
     if (loggedPlayer.teamId != null) {
       _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
-      print(
-          '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
+      // print(
+      //     '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
     }
   }
 

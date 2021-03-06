@@ -8,7 +8,7 @@ const endpoint = 'http://dev.airsofttacticalmaps.eu/api';
 class GentiHelper {
   static Future<void> registerUser(Player player, String pwd) async {
     final url = endpoint + '/registerUser/';
-
+    var uri = Uri.dataFromString(url);
     final map = {
       'id_firebase': player.id,
       'email': player.email,
@@ -19,7 +19,7 @@ class GentiHelper {
 
     try {
       print('[GentiHelper/registerUser] POST to $url, body = $map');
-      final response = await http.post(url, body: map);
+      final response = await http.post(uri, body: map);
       print(
           '[GentiHelper/registerUser] resolved to ${response.body.toString()}');
     } catch (e) {
@@ -30,6 +30,7 @@ class GentiHelper {
 
   static Future<void> editUser(Player player, {String pwd}) async {
     final url = endpoint + '/editUser/';
+    var uri = Uri.dataFromString(url);
     final map = {
       'id_firebase': player.id,
       'email': player.email,
@@ -41,7 +42,7 @@ class GentiHelper {
 
     try {
       print('[GentiHelper/registerUser] POST to $url, body = $map');
-      final response = await http.post(url, body: map);
+      final response = await http.post(uri, body: map);
       print(
           '[GentiHelper/registerUser] resolved to ${response.body.toString()}');
     } catch (e) {
@@ -52,12 +53,13 @@ class GentiHelper {
 
   static Future<void> createChannel(Faction faction) async {
     final url = endpoint + '/createChannel/';
+    var uri = Uri.dataFromString(url);
 
     final map = {'id': faction.id, 'name': faction.name};
 
     try {
       print('[GentiHelper/createChannel] POST to $url, body = $map');
-      final response = await http.post(url, body: map);
+      final response = await http.post(uri, body: map);
       print(
           '[GentiHelper/createChannel] resolved to ${response.body.toString()}');
     } catch (e) {

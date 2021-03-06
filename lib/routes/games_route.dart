@@ -198,6 +198,6 @@ PopupMenuButton<String> _menuPopup(BuildContext context) {
     enabled: itemsList.isNotEmpty,
     onSelected: (value) => Navigator.of(context).pushNamed(value),
     itemBuilder: (context) => itemsList,
-    offset: Offset(0, 50),
+    // offset: Offset(0, 50),
   );
 }

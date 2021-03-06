@@ -140,7 +140,7 @@ class MenuPopUp extends StatelessWidget {
       enabled: itemsList.isNotEmpty,
       onSelected: (value) => value(),
       itemBuilder: (context) => itemsList,
-      offset: Offset(0, 50),
+      // offset: Offset(0, 50),
     );
   }
 }
