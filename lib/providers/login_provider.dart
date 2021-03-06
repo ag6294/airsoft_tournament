@@ -1,3 +1,4 @@
+import 'package:airsoft_tournament/helpers/NotificationsHelper.dart';
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/helpers/shared_preferences_helper.dart';
 import 'package:airsoft_tournament/models/player.dart';
@@ -49,6 +50,7 @@ class LoginProvider extends ChangeNotifier {
         '[LoginProvider/getAndSetLoggedPlayerTeam] get team ${_loggedPlayer.teamId}');
     if (loggedPlayer.teamId != null) {
       _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
+      FirebaseNotificationHelper.subscribeChannel(loggedPlayer.teamId);
       // print(
       //     '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
     }
@@ -114,6 +116,7 @@ class LoginProvider extends ChangeNotifier {
   Future<void> logOut() async {
     await SharedPreferencesHelper.logout();
     await FirebaseHelper.userLogout();
+    FirebaseNotificationHelper.logout(loggedPlayer.teamId);
     _loggedPlayer = null;
     _loggedPlayerTeam = null;
     notifyListeners();

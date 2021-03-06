@@ -1,3 +1,4 @@
+import 'package:airsoft_tournament/helpers/NotificationsHelper.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('[MyApp] Build');
+    FirebaseNotificationHelper.init();
 
     return MultiProvider(
       providers: [
