@@ -5,6 +5,12 @@ const TextStyle kCardTitle = TextStyle(
   fontWeight: FontWeight.bold,
 );
 
+const TextStyle kAccentCardTitle = TextStyle(
+  fontSize: 32,
+  fontWeight: FontWeight.bold,
+  color: Colors.black87,
+);
+
 const TextStyle kTitle = TextStyle(
   fontSize: 24,
   fontWeight: FontWeight.bold,
@@ -18,6 +24,11 @@ const TextStyle kBigText = TextStyle(
 const TextStyle kMediumText = TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.bold,
+);
+const TextStyle kAccentMediumText = TextStyle(
+  fontSize: 14,
+  fontWeight: FontWeight.bold,
+  color: Colors.black87,
 );
 
 const TextStyle kSmallText = TextStyle(

@@ -26,10 +26,7 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   bool isEditing = false;
   Game game;
 
-  List<GameParticipation> participations = [];
-  List<Player> playerNotReplied = [];
-
-  List<KPIBox> factionsBoxes;
+  List<Player> teamPlayers = [];
 
   @override
   void didChangeDependencies() {
@@ -38,30 +35,39 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
     loggedPlayer =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
 
-    //If the game is hosted by my team, then I will do stuff to show the players from my team that have not replied yet
-    playerNotReplied = game.hostTeamId.compareTo(
-                Provider.of<LoginProvider>(context).loggedPlayerTeam.id) ==
-            0
-        ? Provider.of<LoginProvider>(context, listen: false)
-            .loggedPlayerTeam
-            .players
-        : [];
+    teamPlayers = Provider.of<LoginProvider>(context, listen: false)
+        .loggedPlayerTeam
+        .players;
 
-    _refreshFactionKPIs();
+    // _refreshFactionKPIs();
   }
 
-  void _refreshFactionKPIs() {
-    factionsBoxes = game.factions
-        .map((e) => KPIBox(
-              label: e.name,
-              value: participations
-                  .where((element) =>
-                      element.isGoing && element.faction?.compareTo(e.id) == 0)
-                  .length
-                  .toString(),
-            ))
-        .toList();
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: Provider.of<GamesProvider>(context, listen: false)
+          .fetchAndSetGameParticipations(game, teamPlayers),
+      builder: (context, snapshot) => ModalProgressHUD(
+        inAsyncCall: snapshot.connectionState != ConnectionState.done,
+        child: ParticipationsScaffold(game, loggedPlayer, teamPlayers),
+      ),
+    );
   }
+}
+
+class ParticipationsScaffold extends StatefulWidget {
+  final Game game;
+  final Player loggedPlayer;
+  final List<Player> teamPlayers;
+
+  ParticipationsScaffold(this.game, this.loggedPlayer, this.teamPlayers);
+
+  @override
+  _ParticipationsScaffoldState createState() => _ParticipationsScaffoldState();
+}
+
+class _ParticipationsScaffoldState extends State<ParticipationsScaffold> {
+  bool isEditing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +75,9 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       appBar: AppBar(
         title: Text('Presenze'),
         actions: [
-          if (game.date.isAfter(DateTime.now()) &&
-              loggedPlayer.isGM &&
-              loggedPlayer.teamId.compareTo(game.hostTeamId) == 0)
+          if (widget.game.date.isAfter(DateTime.now()) &&
+              widget.loggedPlayer.isGM &&
+              widget.loggedPlayer.teamId.compareTo(widget.game.hostTeamId) == 0)
             IconButton(
                 icon: !isEditing ? Icon(Icons.edit) : Icon(Icons.edit_off),
                 onPressed: () {
@@ -86,16 +92,66 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
       body: RefreshIndicator(
         onRefresh: () async {
           Provider.of<GamesProvider>(context, listen: false)
-              .fetchAndSetGameParticipations(game);
+              .fetchAndSetGameParticipations(widget.game, widget.teamPlayers);
         },
         child: Consumer<GamesProvider>(builder: (context, gameProvider, _) {
-          participations = gameProvider.gameParticipations;
+          final participations = gameProvider.filteredGameParticipations;
+          final playersNotReplied = gameProvider.filteredNotReplyingPlayers;
+          final selectedKpiIndex = gameProvider.selectedKpi;
 
-          for (GameParticipation p in participations) {
-            playerNotReplied
-                .removeWhere((player) => player.id.compareTo(p.playerId) == 0);
+          final factionBoxes = <KPIBox>[];
+
+          for (var i = 0; i < widget.game.factions.length; i++) {
+            final e = widget.game.factions[i];
+            factionBoxes.add(KPIBox(
+              label: e.name,
+              value: gameProvider.getKpiForFaction(e.id).toString(),
+              isSelected: selectedKpiIndex == 3 + i,
+              selectionCallback: () =>
+                  gameProvider.filterParticipationsByFaction(e.id, 3 + i),
+              deselectionCallback: () =>
+                  gameProvider.resetFilteredParticipations(),
+            ));
           }
-          _refreshFactionKPIs();
+
+          final kpiBoxes = [
+            KPIBox(
+              value: gameProvider
+                  .getKpiForStatus(participationStatus.going)
+                  .toString(),
+              label: 'Presenti',
+              isSelected: selectedKpiIndex == 0,
+              selectionCallback: () => gameProvider
+                  .filterParticipationsByStatus(participationStatus.going, 0),
+              deselectionCallback: () =>
+                  gameProvider.resetFilteredParticipations(),
+            ),
+            KPIBox(
+              value: gameProvider
+                  .getKpiForStatus(participationStatus.not_going)
+                  .toString(),
+              label: 'Assenti',
+              isSelected: selectedKpiIndex == 1,
+              selectionCallback: () =>
+                  gameProvider.filterParticipationsByStatus(
+                      participationStatus.not_going, 1),
+              deselectionCallback: () =>
+                  gameProvider.resetFilteredParticipations(),
+            ),
+            KPIBox(
+              value: gameProvider
+                  .getKpiForStatus(participationStatus.not_replied)
+                  .toString(),
+              label: 'In dubbio',
+              isSelected: selectedKpiIndex == 2,
+              selectionCallback: () =>
+                  gameProvider.filterParticipationsByStatus(
+                      participationStatus.not_replied, 2),
+              deselectionCallback: () =>
+                  gameProvider.resetFilteredParticipations(),
+            ),
+            ...factionBoxes,
+          ];
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -106,47 +162,32 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   // shrinkWrap: true,
-                  children: [
-                    KPIBox(
-                      value:
-                          '${participations.where((element) => element.isGoing).length}',
-                      label: 'Presenti',
-                    ),
-                    KPIBox(
-                      value:
-                          '${participations.where((element) => !element.isGoing).length}',
-                      label: 'Assenti',
-                    ),
-                    KPIBox(
-                      value: '${playerNotReplied.length}',
-                      label: 'In dubbio',
-                    ),
-                    ...factionsBoxes,
-                  ],
+                  children: kpiBoxes,
                 ),
               ),
               Divider(),
               Expanded(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: participations.length + playerNotReplied.length,
+                  itemCount: participations.length + playersNotReplied.length,
                   itemBuilder: (context, index) => index < participations.length
                       ? ParticipationCard(
-                          participations[index], isEditing, game)
+                          participations[index], isEditing, widget.game)
                       : PlayerNotRepliedCard(
-                          playerNotReplied[index - participations.length]),
+                          playersNotReplied[index - participations.length]),
                 ),
               ),
             ],
           );
         }),
       ),
-      persistentFooterButtons: loggedPlayer.isGM &&
-              loggedPlayer.teamId.compareTo(game.hostTeamId) == 0 &&
+      persistentFooterButtons: widget.loggedPlayer.isGM &&
+              widget.loggedPlayer.teamId.compareTo(widget.game.hostTeamId) ==
+                  0 &&
               !isEditing
           ? [
-              _ModalBottomSheetButton(game),
-              _ExportButton(game, loggedPlayer),
+              _ModalBottomSheetButton(widget.game),
+              _ExportButton(widget.game, widget.loggedPlayer),
             ]
           : null,
     );

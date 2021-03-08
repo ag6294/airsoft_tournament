@@ -14,6 +14,10 @@ class GamesProvider extends ChangeNotifier {
   List<Game> _filteredGames = [];
   List<GameParticipation> _loggedUserParticipations = [];
   List<GameParticipation> _gameParticipations = [];
+  List<GameParticipation> _filteredGameParticipations = [];
+  List<Player> _notReplyingPlayers = [];
+  List<Player> _filteredNotReplyingPlayers = [];
+  int selectedKpi = -1;
 
   GamesProvider() {
     print('[GameProvider] Constructor');
@@ -48,6 +52,14 @@ class GamesProvider extends ChangeNotifier {
   List<GameParticipation> get loggedUserParticipations =>
       _loggedUserParticipations;
   List<GameParticipation> get gameParticipations => _gameParticipations;
+  List<GameParticipation> get filteredGameParticipations =>
+      _filteredGameParticipations;
+  List<Player> get notReplyingPlayers => _notReplyingPlayers
+    ..sort((Player a, Player b) =>
+        a.nickname.toLowerCase().compareTo(b.nickname.toLowerCase()));
+  List<Player> get filteredNotReplyingPlayers => _filteredNotReplyingPlayers
+    ..sort((Player a, Player b) =>
+        a.nickname.toLowerCase().compareTo(b.nickname.toLowerCase()));
 
   void sortParticipations() {
     _gameParticipations
@@ -58,6 +70,65 @@ class GamesProvider extends ChangeNotifier {
         if (b.faction == null) return 1;
         return a.faction.compareTo(b.faction);
       });
+
+    _filteredGameParticipations
+      ..sort((a, b) {
+        if (a.isGoing && !b.isGoing) return -1;
+        if (!a.isGoing && b.isGoing) return 1;
+        if (a.faction == null) return -1;
+        if (b.faction == null) return 1;
+        return a.faction.compareTo(b.faction);
+      });
+
+    notifyListeners();
+  }
+
+  void filterParticipationsByStatus(participationStatus status, int kpiIndex) {
+    selectedKpi = kpiIndex;
+
+    switch (status) {
+      case participationStatus.going:
+        {
+          _filteredGameParticipations = List<GameParticipation>.from(
+              _gameParticipations.where((element) => element.isGoing));
+          _filteredNotReplyingPlayers = [];
+        }
+        break;
+      case participationStatus.not_going:
+        {
+          _filteredGameParticipations = List<GameParticipation>.from(
+              _gameParticipations.where((element) => !element.isGoing));
+          _filteredNotReplyingPlayers = [];
+        }
+        break;
+      case participationStatus.not_replied:
+        {
+          _filteredGameParticipations = [];
+          _filteredNotReplyingPlayers = notReplyingPlayers;
+        }
+        break;
+      default:
+        break;
+    }
+    notifyListeners();
+  }
+
+  void filterParticipationsByFaction(String factionId, int kpiIndex) {
+    selectedKpi = kpiIndex;
+
+    _filteredGameParticipations = List<GameParticipation>.from(
+        _gameParticipations.where(
+            (element) => factionId.compareTo(element.faction ?? '') == 0));
+    _filteredNotReplyingPlayers = [];
+
+    notifyListeners();
+  }
+
+  void resetFilteredParticipations() {
+    selectedKpi = -1;
+    _filteredNotReplyingPlayers = List<Player>.from(notReplyingPlayers);
+    _filteredGameParticipations =
+        List<GameParticipation>.from(gameParticipations);
 
     notifyListeners();
   }
@@ -119,12 +190,14 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchAndSetGameParticipations(Game game) async {
+  Future<void> fetchAndSetGameParticipations(
+      Game game, List<Player> invitedPlayers) async {
     print(
         '[GameProvider/fetchAndSetGameParticipations] starting for teamId : ${game.id}');
 
     _gameParticipations = await FirebaseHelper.fetchGameParticipations(game.id);
 
+    //fixing participations with factions that have been lately deleted
     for (int i = 0; i < _gameParticipations.length; i++) {
       var found = false;
       final p = _gameParticipations[i];
@@ -147,6 +220,14 @@ class GamesProvider extends ChangeNotifier {
 
     sortParticipations();
 
+    //Evaluating invited players that have not replied yet
+    _notReplyingPlayers = List<Player>.from(invitedPlayers);
+    for (GameParticipation p in _gameParticipations) {
+      _notReplyingPlayers
+          .removeWhere((player) => player.id.compareTo(p.playerId) == 0);
+    }
+
+    resetFilteredParticipations();
     notifyListeners();
   }
 
@@ -155,7 +236,7 @@ class GamesProvider extends ChangeNotifier {
     print(
         '[GameProvider/editParticipation] starting for participation ${participation.asMap}');
     if (participation.id != null) {
-      final index = _gameParticipations
+      var index = _gameParticipations
           .indexWhere((element) => element.id == participation.id);
 
       if (isLoggedUserParticipation) {
@@ -168,6 +249,12 @@ class GamesProvider extends ChangeNotifier {
       _gameParticipations.removeAt(index);
       _gameParticipations.insert(index, participation);
 
+      index = _filteredGameParticipations
+          .indexWhere((element) => element.id == participation.id);
+      _filteredGameParticipations.removeAt(index);
+      _filteredGameParticipations.insert(index, participation);
+
+      // resetFilteredParticipations();
       notifyListeners();
 
       FirebaseHelper.editParticipation(participation);
@@ -176,17 +263,25 @@ class GamesProvider extends ChangeNotifier {
       final tempParticipation =
           GameParticipation.fromMap(tempId, participation.asMap);
       _gameParticipations.add(tempParticipation);
+      _filteredGameParticipations.add(tempParticipation);
+
       if (isLoggedUserParticipation)
         _loggedUserParticipations.add(tempParticipation);
+
+      // resetFilteredParticipations();
       notifyListeners();
 
       print(
           '[GameProvider/editParticipation] added tempParticipation ${tempParticipation.asMap}');
 
       FirebaseHelper.addNewParticipation(participation).then((value) {
-        final index = _gameParticipations.indexWhere((gp) => gp.id == tempId);
+        var index = _gameParticipations.indexWhere((gp) => gp.id == tempId);
         _gameParticipations.removeAt(index);
         _gameParticipations.insert(index, value);
+
+        index = _filteredGameParticipations.indexWhere((gp) => gp.id == tempId);
+        _filteredGameParticipations.removeAt(index);
+        _filteredGameParticipations.insert(index, value);
 
         print(
             '[GameProvider/editParticipation] added participation ${value.asMap}');
@@ -195,6 +290,8 @@ class GamesProvider extends ChangeNotifier {
           _loggedUserParticipations.removeWhere((gp) => gp.id == tempId);
           _loggedUserParticipations.add(value);
         }
+
+        // resetFilteredParticipations();
         notifyListeners();
       });
     }
@@ -260,6 +357,27 @@ class GamesProvider extends ChangeNotifier {
     );
 
     await FlutterEmailSender.send(email);
+  }
+
+  int getKpiForStatus(participationStatus status) {
+    switch (status) {
+      case participationStatus.going:
+        return _gameParticipations.where((element) => element.isGoing).length;
+
+      case participationStatus.not_going:
+        return _gameParticipations.where((element) => !element.isGoing).length;
+
+      case participationStatus.not_replied:
+        return notReplyingPlayers.length;
+
+      default:
+        return 0;
+    }
+  }
+
+  int getKpiForFaction(String factionId) {
+    return List.from(_gameParticipations.where(
+        (element) => factionId.compareTo(element.faction ?? '') == 0)).length;
   }
 }
 

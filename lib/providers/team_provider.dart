@@ -11,8 +11,9 @@ class TeamsProvider extends ChangeNotifier {
   List<TeamPost> get posts => List<TeamPost>.from(
       _posts..sort((a, b) => a.creationDate.compareTo(b.creationDate)));
 
-  List<Player> get members => List<Player>.from(
-      _members..sort((a, b) => a.nickname.compareTo(b.nickname)));
+  List<Player> get members => List<Player>.from(_members
+    ..sort((a, b) =>
+        a.nickname.toLowerCase().compareTo(b.nickname.toLowerCase())));
 
   Future<List<Team>> fetchTeams() async {
     List<Team> teams = [];

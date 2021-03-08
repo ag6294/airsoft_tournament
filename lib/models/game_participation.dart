@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+enum participationStatus { going, not_going, not_replied }
+
 class GameParticipation {
   final String id;
   final String gameId;

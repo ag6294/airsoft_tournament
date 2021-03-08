@@ -4,8 +4,9 @@ import 'package:airsoft_tournament/constants/style.dart';
 class TitleAndInfo extends StatelessWidget {
   final String title;
   final String description;
+  final Widget action;
 
-  TitleAndInfo(this.title, this.description);
+  TitleAndInfo(this.title, this.description, [this.action]);
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -18,7 +19,13 @@ class TitleAndInfo extends StatelessWidget {
             bottom: 4.0,
             top: 12.0,
           ),
-          child: Text(title, style: kTitle),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: kTitle),
+              if (action != null) action,
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(

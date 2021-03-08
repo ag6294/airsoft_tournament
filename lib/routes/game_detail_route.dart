@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:airsoft_tournament/helpers/map_opener.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:airsoft_tournament/constants/style.dart';
@@ -28,6 +29,7 @@ class GameDetailRoute extends StatefulWidget {
 }
 
 class _GameDetailRouteState extends State<GameDetailRoute> {
+  Player loggedPlayer;
   Game game;
 
   @override
@@ -35,8 +37,10 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
     super.didChangeDependencies();
     final Game gameFromPop = ModalRoute.of(context).settings.arguments;
     game = gameFromPop ?? game;
+    loggedPlayer =
+        Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
     Provider.of<GamesProvider>(context, listen: false)
-        .fetchAndSetGameParticipations(game);
+        .fetchAndSetGameParticipations(game, []);
   }
 
   void onModifyPop(Game editedGame) {
@@ -56,7 +60,7 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
           GameCover(game, onModifyPop),
           GameParticipations(game),
           GameDetails(game),
-          _BottomButtons(game),
+          _BottomButtons(game, loggedPlayer),
         ],
       ),
     );
@@ -131,11 +135,20 @@ class GameDetails extends StatelessWidget {
     return SliverList(
       delegate: SliverChildListDelegate(
         [
-          TitleAndInfo('Data e Luogo',
-              '${DateFormat('dd/MM/yyyy').format(game.date)}\n${game.place}'),
+          TitleAndInfo(
+              'Data e Luogo',
+              '${DateFormat('dd/MM/yyyy').format(game.date)}\n${game.place}',
+              _openMapsButton(context, game.place)),
           TitleAndInfo('Descrizione', game.description),
         ],
       ),
+    );
+  }
+
+  Widget _openMapsButton(BuildContext context, String query) {
+    return GestureDetector(
+      child: Icon(Icons.map_outlined),
+      onTap: () => MapsLauncher.launchQuery(query),
     );
   }
 }
@@ -339,8 +352,9 @@ class MenuPopUp extends StatelessWidget {
 
 class _BottomButtons extends StatelessWidget {
   final Game game;
+  final Player loggedPlayer;
 
-  _BottomButtons(this.game);
+  _BottomButtons(this.game, this.loggedPlayer);
 
   @override
   Widget build(BuildContext context) {
@@ -351,15 +365,16 @@ class _BottomButtons extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pushNamed(
-                        GameParticipationsRoute.routeName,
-                        arguments: game),
-                    child: Text('Lista dei partecipanti'),
+                if (game.hostTeamId.compareTo(loggedPlayer.teamId) == 0)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pushNamed(
+                          GameParticipationsRoute.routeName,
+                          arguments: game),
+                      child: Text('Lista dei partecipanti'),
+                    ),
                   ),
-                ),
                 if (game.attachmentUrl != null && game.attachmentUrl != '')
                   Padding(
                     padding: const EdgeInsets.all(8.0),
