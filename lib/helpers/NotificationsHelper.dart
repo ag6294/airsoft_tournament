@@ -5,6 +5,7 @@
 
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io';
 
 const kVapidKey =
     'BIS0R3MN4qYc0-C3pUeEm6Jk1HYHiv0lofM6NuFkUHMXvX2dK05pNyBcj1BmjnwApFCOvctWGz5ZQ6l_a0fOWaU';
@@ -27,7 +28,8 @@ class FirebaseNotificationHelper {
   }
 
   static void subscribeChannel(String channel) {
-    _messaging.subscribeToTopic(channel);
+    if (Platform.isAndroid || Platform.isIOS)
+      _messaging.subscribeToTopic(channel);
   }
 
   static void logout(String channel) {
