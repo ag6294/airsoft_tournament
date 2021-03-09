@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:http/http.dart' as http;
+import 'dart:io';
 
 const kVapidKey =
     'BIS0R3MN4qYc0-C3pUeEm6Jk1HYHiv0lofM6NuFkUHMXvX2dK05pNyBcj1BmjnwApFCOvctWGz5ZQ6l_a0fOWaU';
@@ -40,7 +40,8 @@ class FirebaseNotificationHelper {
   }
 
   static void subscribeChannel(String channel) {
-    _messaging.subscribeToTopic(channel);
+    if (Platform.isAndroid || Platform.isIOS)
+      _messaging.subscribeToTopic(channel);
   }
 
   static void logout(String channel) {
@@ -80,8 +81,30 @@ class FirebaseNotificationHelper {
     print(
         '[FirebaseNotificationHelper/sendNewGameNotification] resolved to ${response.body.toString()}');
   }
-
-  static Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-    print("Handling a background message: ${message.messageId}");
-  }
 }
+
+// class PushNotificationsManager {
+//   PushNotificationsManager._();
+//
+//   factory PushNotificationsManager() => _instance;
+//
+//   static final PushNotificationsManager _instance =
+//       PushNotificationsManager._();
+//
+//   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+//   bool _initialized = false;
+//
+//   Future<void> init() async {
+//     if (!_initialized) {
+//       // For iOS request permission first.
+//       _firebaseMessaging.requestNotificationPermissions();
+//       _firebaseMessaging.configure();
+//
+//       // For testing purposes print the Firebase Messaging token
+//       String token = await _firebaseMessaging.getToken();
+//       print("FirebaseMessaging token: $token");
+//
+//       _initialized = true;
+//     }
+//   }
+// }
