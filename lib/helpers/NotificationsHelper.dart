@@ -46,8 +46,8 @@ class FirebaseNotificationHelper {
   }
 
   static void subscribeChannel(String channel) {
-    if (Platform.isAndroid || Platform.isIOS)
-      _messaging.subscribeToTopic(channel);
+    // if (Platform.isAndroid || Platform.isIOS)
+    //   _messaging.subscribeToTopic(channel);
   }
 
   static void logout(String channel) {
