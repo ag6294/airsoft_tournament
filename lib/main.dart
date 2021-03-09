@@ -22,14 +22,26 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseNotificationHelper.init();
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // FirebaseMessaging.instance
+  //   //     .getInitialMessage()
+  //   //     .then((RemoteMessage message) {
+  //   //   if (message != null) {
+  //   //     Navigator.pushNamed(context, '/message',
+  //   //         arguments: MessageArguments(message, true));
+  //     }
+  //   });
+
   @override
   Widget build(BuildContext context) {
     print('[MyApp] Build');
-    FirebaseNotificationHelper.init();
 
     return MultiProvider(
       providers: [
