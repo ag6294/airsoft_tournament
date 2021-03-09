@@ -9,6 +9,7 @@ import 'package:airsoft_tournament/models/game.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 const kVapidKey =
     'BIS0R3MN4qYc0-C3pUeEm6Jk1HYHiv0lofM6NuFkUHMXvX2dK05pNyBcj1BmjnwApFCOvctWGz5ZQ6l_a0fOWaU';
@@ -31,12 +32,17 @@ class FirebaseNotificationHelper {
 
     print("[FirebaseNotificationHelper/init] FirebaseMessaging token: $token");
 
-    FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
+  }
+
+  static Future<void> _firebaseMessagingBackgroundHandler(
+      RemoteMessage message) async {
+    print('Handling a background message ${message.messageId}');
   }
 
   static void subscribeChannel(String channel) {
