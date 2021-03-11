@@ -216,7 +216,11 @@ class _ParticipationCardState extends State<ParticipationCard> {
               value: e.id,
               child: Text(e.name),
             ))
-        .toList();
+        .toList()
+          ..add(DropdownMenuItem(
+            child: Text('Nessuna fazione'),
+            value: null,
+          ));
   }
 
   @override

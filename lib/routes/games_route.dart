@@ -32,77 +32,86 @@ class _GamesRouteState extends State<GamesRoute> {
     final teamId =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayer.teamId;
 
-    return Scaffold(
-      body: FutureBuilder(
-        future: Provider.of<GamesProvider>(context, listen: false)
-            .fetchAndSetGames(teamId, false),
-        builder: (context, snapshot) {
-          return ModalProgressHUD(
-            inAsyncCall: snapshot.connectionState != ConnectionState.done,
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await Provider.of<GamesProvider>(
-                  context,
-                  listen: false,
-                ).fetchAndSetGames(teamId, true);
-              },
-              child:
-                  Consumer<GamesProvider>(builder: (context, gamesProvider, _) {
-                final list = Provider.of<GamesProvider>(context).filteredGames;
+    return WillPopScope(
+      onWillPop: () {
+        Provider.of<GamesProvider>(context, listen: false)
+            .filterGamesByTitleOrTeam(null);
+        return Future.value(true);
+      },
+      child: Scaffold(
+        body: FutureBuilder(
+          future: Provider.of<GamesProvider>(context, listen: false)
+              .fetchAndSetGames(teamId, false),
+          builder: (context, snapshot) {
+            return ModalProgressHUD(
+              inAsyncCall: snapshot.connectionState != ConnectionState.done,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await Provider.of<GamesProvider>(
+                    context,
+                    listen: false,
+                  ).fetchAndSetGames(teamId, true);
+                },
+                child: Consumer<GamesProvider>(
+                    builder: (context, gamesProvider, _) {
+                  final list =
+                      Provider.of<GamesProvider>(context).filteredGames;
 
-                return CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      title: isSearching
-                          ? TextField(
-                              controller: searchController,
-                              decoration: InputDecoration(
-                                  hintText: 'Filtra per titolo o squadra'),
-                              onChanged: (value) => Provider.of<GamesProvider>(
-                                      context,
-                                      listen: false)
-                                  .filterGamesByTitleOrTeam(
-                                      value.toLowerCase()),
-                            )
-                          : Center(child: Text('Le tue giocate')),
-                      actions: [
-                        if (isSearching)
-                          IconButton(
-                            icon: Icon(Icons.close),
-                            onPressed: () {
-                              setState(() {
-                                isSearching = false;
-                                searchController.clear();
-                                Provider.of<GamesProvider>(context,
-                                        listen: false)
-                                    .filterGamesByTitleOrTeam(null);
-                              });
-                            },
-                          ),
-                        if (!isSearching)
-                          IconButton(
-                              icon: Icon(Icons.search),
+                  return CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        title: isSearching
+                            ? TextField(
+                                autofocus: true,
+                                controller: searchController,
+                                decoration: InputDecoration(
+                                    hintText: 'Filtra per titolo o squadra'),
+                                onChanged: (value) =>
+                                    Provider.of<GamesProvider>(context,
+                                            listen: false)
+                                        .filterGamesByTitleOrTeam(
+                                            value.toLowerCase()),
+                              )
+                            : Center(child: Text('Le tue giocate')),
+                        actions: [
+                          if (isSearching)
+                            IconButton(
+                              icon: Icon(Icons.close),
                               onPressed: () {
                                 setState(() {
-                                  isSearching = true;
+                                  isSearching = false;
+                                  searchController.clear();
+                                  Provider.of<GamesProvider>(context,
+                                          listen: false)
+                                      .filterGamesByTitleOrTeam(null);
                                 });
-                              }),
-                        if (!isSearching) _menuPopup(context)
-                      ],
-                      floating: true,
-                    ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => GameCard(list[index]),
-                        childCount: list.length,
+                              },
+                            ),
+                          if (!isSearching)
+                            IconButton(
+                                icon: Icon(Icons.search),
+                                onPressed: () {
+                                  setState(() {
+                                    isSearching = true;
+                                  });
+                                }),
+                          if (!isSearching) _menuPopup(context)
+                        ],
+                        floating: true,
                       ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          );
-        },
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => GameCard(list[index]),
+                          childCount: list.length,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

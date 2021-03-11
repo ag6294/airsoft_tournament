@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:airsoft_tournament/helpers/notification_helper.dart';
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:csv/csv.dart';
@@ -15,6 +14,12 @@ class GamesProvider extends ChangeNotifier {
   List<Game> _filteredGames = [];
   List<GameParticipation> _loggedUserParticipations = [];
   List<GameParticipation> _gameParticipations = [];
+
+  bool filteringOnStatus = false;
+  bool filteringOnFaction = false;
+  participationStatus filterStatus;
+  String filterFaction;
+
   List<GameParticipation> _filteredGameParticipations = [];
   List<Player> _notReplyingPlayers = [];
   List<Player> _filteredNotReplyingPlayers = [];
@@ -84,8 +89,19 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetFilterHelpers() {
+    filteringOnStatus = false;
+    filteringOnFaction = false;
+    filterStatus = null;
+    filterFaction = null;
+  }
+
   void filterParticipationsByStatus(participationStatus status, int kpiIndex) {
     selectedKpi = kpiIndex;
+
+    resetFilterHelpers();
+    filteringOnStatus = true;
+    filterStatus = status;
 
     switch (status) {
       case participationStatus.going:
@@ -117,6 +133,10 @@ class GamesProvider extends ChangeNotifier {
   void filterParticipationsByFaction(String factionId, int kpiIndex) {
     selectedKpi = kpiIndex;
 
+    resetFilterHelpers();
+    filteringOnFaction = true;
+    filterFaction = factionId;
+
     _filteredGameParticipations = List<GameParticipation>.from(
         _gameParticipations.where(
             (element) => factionId.compareTo(element.faction ?? '') == 0));
@@ -126,12 +146,22 @@ class GamesProvider extends ChangeNotifier {
   }
 
   void resetFilteredParticipations() {
+    resetFilterHelpers();
     selectedKpi = -1;
     _filteredNotReplyingPlayers = List<Player>.from(notReplyingPlayers);
     _filteredGameParticipations =
         List<GameParticipation>.from(gameParticipations);
 
     notifyListeners();
+  }
+
+  void filterAgainParticipations() {
+    if (filteringOnStatus) {
+      filterParticipationsByStatus(filterStatus, selectedKpi);
+    } else if (filteringOnFaction) {
+      filterParticipationsByFaction(filterFaction, selectedKpi);
+    } else
+      resetFilteredParticipations();
   }
 
   Future<Game> addNewGame(Game newGame) async {
@@ -252,12 +282,8 @@ class GamesProvider extends ChangeNotifier {
       _gameParticipations.removeAt(index);
       _gameParticipations.insert(index, participation);
 
-      index = _filteredGameParticipations
-          .indexWhere((element) => element.id == participation.id);
-      _filteredGameParticipations.removeAt(index);
-      _filteredGameParticipations.insert(index, participation);
+      filterAgainParticipations();
 
-      // resetFilteredParticipations();
       notifyListeners();
 
       FirebaseHelper.editParticipation(participation);
@@ -266,12 +292,11 @@ class GamesProvider extends ChangeNotifier {
       final tempParticipation =
           GameParticipation.fromMap(tempId, participation.asMap);
       _gameParticipations.add(tempParticipation);
-      _filteredGameParticipations.add(tempParticipation);
 
       if (isLoggedUserParticipation)
         _loggedUserParticipations.add(tempParticipation);
 
-      // resetFilteredParticipations();
+      filterAgainParticipations();
       notifyListeners();
 
       print(
@@ -282,9 +307,7 @@ class GamesProvider extends ChangeNotifier {
         _gameParticipations.removeAt(index);
         _gameParticipations.insert(index, value);
 
-        index = _filteredGameParticipations.indexWhere((gp) => gp.id == tempId);
-        _filteredGameParticipations.removeAt(index);
-        _filteredGameParticipations.insert(index, value);
+        filterAgainParticipations();
 
         print(
             '[GameProvider/editParticipation] added participation ${value.asMap}');
@@ -302,10 +325,14 @@ class GamesProvider extends ChangeNotifier {
 
   Future<void> deleteGame(Game game) async {
     print('[GameProvider/addNewGame] title: ${game.title}');
-    await FirebaseHelper.deleteGame(game);
-
     _games.removeWhere((element) => element.id == game.id);
+    _gameParticipations.removeWhere((element) => element.gameId == game.id);
+    _loggedUserParticipations
+        .removeWhere((element) => element.gameId == game.id);
     notifyListeners();
+
+    FirebaseHelper.deleteGame(game);
+    // await FirebaseHelper.deleteParticipationsForGame(game);
   }
 
   Future<Game> editGame(Game game, String oldImageUrl) async {

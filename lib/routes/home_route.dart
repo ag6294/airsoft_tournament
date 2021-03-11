@@ -1,12 +1,11 @@
 import 'package:airsoft_tournament/constants/style.dart';
-import 'package:airsoft_tournament/helpers/notification_helper.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:airsoft_tournament/routes/player_edit_route.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';

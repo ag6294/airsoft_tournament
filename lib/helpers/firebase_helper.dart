@@ -480,13 +480,13 @@ class FirebaseHelper {
 
     final path = '/games.json';
     var params = {
-      'auth': _authToken,
       'orderBy': '\"date\"',
       'startAt': '\"$dataString\"',
+      'auth': _authToken,
     };
     var uri = Uri.https(authority, path, params);
     print(
-        '[FirebaseHelper/fetchFutureGames] GET  /games where date < $dataString - 7 days');
+        '[FirebaseHelper/fetchFutureGames] GET ${uri.toString().substring(0, 200)}');
 
     final response = await http.get(uri);
     Map<String, dynamic> map = json.decode(response.body);
@@ -604,29 +604,49 @@ class FirebaseHelper {
     };
     var uri = Uri.https(authority, path, params);
 
-    print('[FirebaseHelper/deleteGame] DELETE to /games, id : ${game.id}');
+    print(
+        '[FirebaseHelper/deleteGame] DELETE DELETE to ${uri.toString().substring(0, 200)}');
     var response = await http.delete(uri);
     print(
-        '[FirebaseHelper/deleteGame] DELETE to /games, resolved in ${json.decode(response.body)}');
+        '[FirebaseHelper/deleteGame] DELETE to /games, resolved in ${response.statusCode.toString()}');
 
     print(
         '[FirebaseHelper/deleteGame] Removing image from storage : ${game.imageUrl}');
     await _store.refFromURL(game.imageUrl).delete();
 
-    path = '/participations.json?';
-    params = {
-      'auth': _authToken,
-      'orderBy': '\"gameId\"',
-      'equalTo': '\"${game.id}\"',
-    };
-    uri = Uri.https(authority, path, params);
+    final participations = await fetchGameParticipations(game.id);
 
-    print(
-        '[FirebaseHelper/deleteGame] DELETE to /participations, url : ${uri.toString().substring(0, 200)}');
-    response = await http.delete(uri);
-    print(
-        '[FirebaseHelper/deleteGame] DELETE to /participations, resolved in ${json.decode(response.body)}');
+    participations.forEach((element) {
+      final path = '/participations/${element.id}.json';
+      final params = {
+        'auth': _authToken,
+      };
+      final uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/deleteGame] DELETE to ${uri.toString().substring(0, 200)}');
+      http.delete(uri).then((value) => print(
+          '[FirebaseHelper/deleteGame] DELETE resolved in ${value.statusCode.toString()}'));
+    });
   }
+
+  // static Future<void> deleteParticipationsForGame(Game game) async {
+  //   final _authToken = await _auth.currentUser.getIdToken();
+  //
+  //   final path = '/participations.json';
+  //   var params = {
+  //     'auth': _authToken,
+  //     'orderBy': 'gameId',
+  //     'equalTo': game.id,
+  //   };
+  //   var uri = Uri.https(authority, path, params);
+  //
+  //   print(
+  //       '[FirebaseHelper/deletePost] DELETE to ${uri.toString().substring(0, 200)}');
+  //   var response = await http.delete(uri);
+  //   print(
+  //       '[FirebaseHelper/deletePost]resolved to ${json.decode(response.body)}');
+  // }
 
   static Future<Game> editGame(Game game, String oldImageUrl) async {
     final _authToken = await _auth.currentUser.getIdToken();
@@ -739,9 +759,9 @@ class FirebaseHelper {
 
     final path = '/posts.json';
     var params = {
-      'auth': _authToken,
       'orderBy': '\"teamId\"',
       'equalTo': '\"$teamId\"',
+      'auth': _authToken,
     };
     var uri = Uri.https(authority, path, params);
 

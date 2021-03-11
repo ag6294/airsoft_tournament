@@ -486,7 +486,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FlatButton(
+                      TextButton(
                           onPressed: addFaction,
                           child: Text('Aggiungi fazione')),
                       Expanded(

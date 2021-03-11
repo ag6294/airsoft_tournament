@@ -6,9 +6,7 @@
 import 'dart:convert';
 
 import 'package:airsoft_tournament/models/game.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 
 const kVapidKey =
@@ -54,8 +52,6 @@ class FirebaseNotificationHelper {
   }
 
   static Future<void> sendNewGameNotification(Game game) async {
-    final _authToken = await FirebaseAuth.instance.currentUser.getIdToken();
-
     final message = {
       'notification': {
         'title': 'Nuova giocata di ${game.hostTeamName}',
