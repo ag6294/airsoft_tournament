@@ -13,8 +13,7 @@ import 'package:http/http.dart' as http;
 
 const kVapidKey =
     'BIS0R3MN4qYc0-C3pUeEm6Jk1HYHiv0lofM6NuFkUHMXvX2dK05pNyBcj1BmjnwApFCOvctWGz5ZQ6l_a0fOWaU';
-const serverKey =
-    'AAAA-0fgixQ:APA91bE5sBShtkYbzxp7Vw-R6WmBkNqsOiWWzoxcgGWiQVCXJx1gJvmFkS8qMXiNftTJBM9sKJAgJ10KNXnUutZQfkCgY2DYsoCB0RE6ZARHWN6VL9k0UInOd6sN-XotZ7U6pVr1ZPEL';
+const serverKey = '';
 
 FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
@@ -32,12 +31,12 @@ class FirebaseNotificationHelper {
 
     print("[FirebaseNotificationHelper/init] FirebaseMessaging token: $token");
 
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    _messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // _messaging.setForegroundNotificationPresentationOptions(
+    //   alert: true,
+    //   badge: true,
+    //   sound: true,
+    // );
   }
 
   static Future<void> _firebaseMessagingBackgroundHandler(
@@ -51,7 +50,7 @@ class FirebaseNotificationHelper {
   }
 
   static void logout(String channel) {
-    _messaging.unsubscribeFromTopic(channel);
+    // _messaging.unsubscribeFromTopic(channel);
   }
 
   static Future<void> sendNewGameNotification(Game game) async {
@@ -88,29 +87,3 @@ class FirebaseNotificationHelper {
         '[FirebaseNotificationHelper/sendNewGameNotification] resolved to ${response.body.toString()}');
   }
 }
-
-// class PushNotificationsManager {
-//   PushNotificationsManager._();
-//
-//   factory PushNotificationsManager() => _instance;
-//
-//   static final PushNotificationsManager _instance =
-//       PushNotificationsManager._();
-//
-//   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-//   bool _initialized = false;
-//
-//   Future<void> init() async {
-//     if (!_initialized) {
-//       // For iOS request permission first.
-//       _firebaseMessaging.requestNotificationPermissions();
-//       _firebaseMessaging.configure();
-//
-//       // For testing purposes print the Firebase Messaging token
-//       String token = await _firebaseMessaging.getToken();
-//       print("FirebaseMessaging token: $token");
-//
-//       _initialized = true;
-//     }
-//   }
-// }

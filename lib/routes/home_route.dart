@@ -1,5 +1,5 @@
 import 'package:airsoft_tournament/constants/style.dart';
-import 'package:airsoft_tournament/helpers/NotificationsHelper.dart';
+import 'package:airsoft_tournament/helpers/notification_helper.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';

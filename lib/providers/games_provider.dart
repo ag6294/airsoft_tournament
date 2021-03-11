@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:airsoft_tournament/helpers/NotificationsHelper.dart';
+import 'package:airsoft_tournament/helpers/notification_helper.dart';
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:csv/csv.dart';
@@ -150,7 +150,7 @@ class GamesProvider extends ChangeNotifier {
     _games.sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
 
-    FirebaseNotificationHelper.sendNewGameNotification(uploadedGame);
+    // FirebaseNotificationHelper.sendNewGameNotification(uploadedGame);
     return uploadedGame;
   }
 

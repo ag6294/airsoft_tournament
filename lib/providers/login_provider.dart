@@ -1,4 +1,4 @@
-import 'package:airsoft_tournament/helpers/NotificationsHelper.dart';
+import 'package:airsoft_tournament/helpers/notification_helper.dart';
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/helpers/shared_preferences_helper.dart';
 import 'package:airsoft_tournament/models/player.dart';
