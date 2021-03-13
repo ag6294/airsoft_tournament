@@ -164,13 +164,13 @@ class GamesProvider extends ChangeNotifier {
       resetFilteredParticipations();
   }
 
-  Future<Game> addNewGame(Game newGame) async {
+  Future<Game> addNewGame(Game newGame, {File image}) async {
     print('[GameProvider/addNewGame] title: ${newGame.title}');
 
     Game uploadedGame;
 
     try {
-      uploadedGame = await FirebaseHelper.addGame(newGame);
+      uploadedGame = await FirebaseHelper.addGame(newGame, image);
     } catch (e) {
       rethrow;
     }
@@ -326,6 +326,8 @@ class GamesProvider extends ChangeNotifier {
   Future<void> deleteGame(Game game) async {
     print('[GameProvider/addNewGame] title: ${game.title}');
     _games.removeWhere((element) => element.id == game.id);
+    _filteredGames.removeWhere((element) => element.id == game.id);
+
     _gameParticipations.removeWhere((element) => element.gameId == game.id);
     _loggedUserParticipations
         .removeWhere((element) => element.gameId == game.id);
@@ -335,10 +337,10 @@ class GamesProvider extends ChangeNotifier {
     // await FirebaseHelper.deleteParticipationsForGame(game);
   }
 
-  Future<Game> editGame(Game game, String oldImageUrl) async {
+  Future<Game> editGame(Game game, String oldImageUrl, {File image}) async {
     print('[GameProvider/addNewGame] title: ${game.title}');
 
-    var newGame = await FirebaseHelper.editGame(game, oldImageUrl);
+    var newGame = await FirebaseHelper.editGame(game, oldImageUrl, image);
     _games.removeWhere((element) => element.id == newGame.id);
     _games.add(newGame);
 

@@ -1,3 +1,4 @@
+import 'package:airsoft_tournament/widgets/dialogs/confirmation_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
@@ -115,10 +116,15 @@ class PostCard extends StatelessWidget {
                         )),
                 IconButton(
                   icon: Icon(Icons.delete_outline),
-                  onPressed: () =>
-                      Provider.of<TeamsProvider>(context, listen: false)
-                          .deletePost(post),
-                )
+                  onPressed: () => showConfirmationDialog(context).then(
+                    (value) {
+                      if (value) {
+                        Provider.of<TeamsProvider>(context, listen: false)
+                            .deletePost(post);
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           )

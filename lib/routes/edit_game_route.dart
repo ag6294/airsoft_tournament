@@ -4,6 +4,8 @@ import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/game_detail_route.dart';
+import 'package:airsoft_tournament/widgets/dialogs/unavailable_feature_dialog.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,6 +56,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
 
   var isEditing = false;
   String oldImageUrl;
+  File newImage;
 
   var isAttachmentUrlValid = true;
 
@@ -119,15 +122,10 @@ class _EditGameRouteState extends State<EditGameRoute> {
       try {
         if (!isEditing)
           newGame = await Provider.of<GamesProvider>(context, listen: false)
-              .addNewGame(
-            newGame,
-          );
+              .addNewGame(newGame, image: newImage);
         else
-          newGame =
-              await Provider.of<GamesProvider>(context, listen: false).editGame(
-            newGame,
-            oldImageUrl,
-          );
+          newGame = await Provider.of<GamesProvider>(context, listen: false)
+              .editGame(newGame, oldImageUrl, image: newImage);
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -351,31 +349,37 @@ class _EditGameRouteState extends State<EditGameRoute> {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          FocusScope.of(context).unfocus();
+                          if (!kIsWeb) {
+                            FocusScope.of(context).unfocus();
 
-                          final picker = ImagePicker();
-                          final pickedImage = await picker.getImage(
-                              source: ImageSource.gallery);
+                            final picker = ImagePicker();
+                            final pickedImage = await picker.getImage(
+                                source: ImageSource.gallery);
 
-                          _imageController.text = pickedImage.path;
+                            if (pickedImage != null)
+                              newImage = File(pickedImage.path);
 
-                          editedGame = Game(
-                            place: editedGame.place,
-                            lastModifiedOn: editedGame.lastModifiedOn,
-                            lastModifiedBy: editedGame.lastModifiedBy,
-                            description: editedGame.description,
-                            date: editedGame.date,
-                            id: editedGame.id,
-                            title: editedGame.title,
-                            imageUrl: pickedImage.path,
-                            hostTeamId: editedGame.hostTeamId,
-                            hostTeamName: editedGame.hostTeamName,
-                            attachmentUrl: editedGame.attachmentUrl,
-                            factions: editedGame.factions,
-                            isPrivate: editedGame.isPrivate,
-                          );
+                            _imageController.text = pickedImage.path;
 
-                          setState(() {});
+                            editedGame = Game(
+                              place: editedGame.place,
+                              lastModifiedOn: editedGame.lastModifiedOn,
+                              lastModifiedBy: editedGame.lastModifiedBy,
+                              description: editedGame.description,
+                              date: editedGame.date,
+                              id: editedGame.id,
+                              title: editedGame.title,
+                              imageUrl: pickedImage.path,
+                              hostTeamId: editedGame.hostTeamId,
+                              hostTeamName: editedGame.hostTeamName,
+                              attachmentUrl: editedGame.attachmentUrl,
+                              factions: editedGame.factions,
+                              isPrivate: editedGame.isPrivate,
+                            );
+
+                            setState(() {});
+                          } else
+                            showFeatureNotAvailableDialog(context);
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -397,7 +401,8 @@ class _EditGameRouteState extends State<EditGameRoute> {
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
                                         child: fb.FirebaseHelper.isNetworkImage(
-                                                editedGame.imageUrl)
+                                                    editedGame.imageUrl) ||
+                                                kIsWeb
                                             ? Image.network(editedGame.imageUrl,
                                                 fit: BoxFit.cover)
                                             : Image.file(

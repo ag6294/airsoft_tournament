@@ -378,7 +378,7 @@ class FirebaseHelper {
     }
   }
 
-  static Future<Game> addGame(Game game) async {
+  static Future<Game> addGame(Game game, File image) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
     String body;
@@ -396,7 +396,7 @@ class FirebaseHelper {
       body = json.encode(game.asMap);
 
       print(
-          '[FirebaseHelper/addGame] POST to ${uri.toString().substring(0, 20)}, body = $body');
+          '[FirebaseHelper/addGame] POST to ${uri.toString().substring(0, 200)}, body = $body');
       final response = await http.post(uri, body: body);
       gameId = json.decode(response.body)['name'];
       print('[FirebaseHelper/addGame] resolved to ${response.body.toString()}');
@@ -407,8 +407,9 @@ class FirebaseHelper {
 
     print(
         '[FirebaseHelper/addGame] Uploading image to storage - imageFilePath: ${game.imageUrl}');
-    final imageFile = File(game.imageUrl);
 
+    final imageFile = image;
+    print(imageFile.path);
     final ref = _store
         .ref()
         .child('game_images')
@@ -648,7 +649,8 @@ class FirebaseHelper {
   //       '[FirebaseHelper/deletePost]resolved to ${json.decode(response.body)}');
   // }
 
-  static Future<Game> editGame(Game game, String oldImageUrl) async {
+  static Future<Game> editGame(
+      Game game, String oldImageUrl, File image) async {
     final _authToken = await _auth.currentUser.getIdToken();
     var path = '/games/${game.id}.json';
     var params = {
@@ -659,10 +661,10 @@ class FirebaseHelper {
     String imageUrl;
 
     try {
-      if (!isNetworkImage(game.imageUrl)) {
+      if (image != null) {
         removeFile(oldImageUrl);
 
-        final imageFile = File(game.imageUrl);
+        final imageFile = image;
         final ref = _store
             .ref()
             .child('game_images')

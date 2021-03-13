@@ -4,8 +4,10 @@ import 'package:airsoft_tournament/models/team.dart';
 
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
+import 'package:airsoft_tournament/widgets/dialogs/unavailable_feature_dialog.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -190,25 +192,28 @@ class _TeamEditRouteState extends State<TeamEditRoute> {
                   ),
                   GestureDetector(
                     onTap: () async {
-                      FocusScope.of(context).unfocus();
+                      if (!kIsWeb) {
+                        FocusScope.of(context).unfocus();
 
-                      final picker = ImagePicker();
-                      final pickedImage =
-                          await picker.getImage(source: ImageSource.gallery);
+                        final picker = ImagePicker();
+                        final pickedImage =
+                            await picker.getImage(source: ImageSource.gallery);
 
-                      _imageController.text = pickedImage.path;
+                        _imageController.text = pickedImage.path;
 
-                      team = Team(
-                        name: team.name,
-                        password: team.password,
-                        players: team.players,
-                        id: team.id,
-                        contacts: team.contacts,
-                        description: team.description,
-                        imageUrl: pickedImage.path,
-                      );
+                        team = Team(
+                          name: team.name,
+                          password: team.password,
+                          players: team.players,
+                          id: team.id,
+                          contacts: team.contacts,
+                          description: team.description,
+                          imageUrl: pickedImage.path,
+                        );
 
-                      setState(() {});
+                        setState(() {});
+                      } else
+                        await showFeatureNotAvailableDialog(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

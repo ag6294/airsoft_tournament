@@ -44,7 +44,7 @@ class KPIBox extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(6.0),
                   child: Text(
                     label,
                     style: isSelected ? kAccentMediumText : kMediumText,

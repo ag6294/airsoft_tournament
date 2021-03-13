@@ -2,7 +2,9 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/edit_game_route.dart';
 import 'package:airsoft_tournament/routes/game_detail_route.dart';
+import 'package:airsoft_tournament/widgets/dialogs/unavailable_feature_dialog.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
@@ -194,18 +196,23 @@ class GameCard extends StatelessWidget {
   }
 }
 
-PopupMenuButton<String> _menuPopup(BuildContext context) {
+PopupMenuButton<Function> _menuPopup(BuildContext context) {
   final itemsList = [
     if (Provider.of<LoginProvider>(context, listen: false).loggedPlayer.isGM)
       PopupMenuItem(
-        value: EditGameRoute.routeName,
+        value: () => Navigator.of(context).pushNamed(EditGameRoute.routeName),
         child: Text('Crea una giocata'),
       ),
   ];
 
-  return PopupMenuButton<String>(
+  return PopupMenuButton<Function>(
     enabled: itemsList.isNotEmpty,
-    onSelected: (value) => Navigator.of(context).pushNamed(value),
+    onSelected: (value) {
+      if (kIsWeb)
+        showFeatureNotAvailableDialog(context);
+      else
+        value();
+    },
     itemBuilder: (context) => itemsList,
     // offset: Offset(0, 50),
   );

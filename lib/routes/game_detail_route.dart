@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:airsoft_tournament/helpers/map_opener.dart';
+import 'package:airsoft_tournament/widgets/dialogs/confirmation_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:airsoft_tournament/constants/style.dart';
@@ -333,10 +334,15 @@ class MenuPopUp extends StatelessWidget {
                   .teamId ==
               game.hostTeamId)
         PopupMenuItem(
-          value: () {
-            Provider.of<GamesProvider>(context, listen: false).deleteGame(game);
-            Navigator.of(context).pop();
-          },
+          value: () => showConfirmationDialog(context).then(
+            (value) {
+              if (value) {
+                Provider.of<GamesProvider>(context, listen: false)
+                    .deleteGame(game);
+                Navigator.of(context).pop();
+              }
+            },
+          ),
           child: Text('Elimina'),
         ),
     ];
