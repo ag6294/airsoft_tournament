@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:airsoft_tournament/constants/exceptions.dart';
+import 'package:airsoft_tournament/models/notification.dart';
 import 'package:airsoft_tournament/models/team_post.dart';
 import 'package:path/path.dart' as ph;
 
@@ -378,6 +379,26 @@ class FirebaseHelper {
     }
   }
 
+  static Future<Game> getGameById(String id) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/games/$id.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+
+    print(
+        '[FirebaseHelper/getGameById] GET to ${uri.toString().substring(0, 200)}');
+    final response = await http.get(uri);
+    print(
+        '[FirebaseHelper/getGameById] resolved to ${response.body.toString()}');
+
+    Map<String, dynamic> map = json.decode(response.body);
+
+    return Game.fromMap(id, map);
+  }
+
   static Future<Game> addGame(Game game, File image) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
@@ -629,6 +650,21 @@ class FirebaseHelper {
       http.delete(uri).then((value) => print(
           '[FirebaseHelper/deleteGame] DELETE resolved in ${value.statusCode.toString()}'));
     });
+
+    final notifications = await fetchGameNotifications(game.id);
+
+    participations.forEach((element) {
+      final path = '/notifications/${element.id}.json';
+      final params = {
+        'auth': _authToken,
+      };
+      final uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/deleteGame] DELETE to ${uri.toString().substring(0, 200)}');
+      http.delete(uri).then((value) => print(
+          '[FirebaseHelper/deleteGame] DELETE resolved in ${value.statusCode.toString()}'));
+    });
   }
 
   // static Future<void> deleteParticipationsForGame(Game game) async {
@@ -792,5 +828,101 @@ class FirebaseHelper {
     var response = await http.delete(uri);
     print(
         '[FirebaseHelper/deletePost]resolved to ${json.decode(response.body)}');
+  }
+
+  static Future<List<CustomNotification>> fetchPlayerNotifications(
+      String playerId) async {
+    {
+      final _authToken = await _auth.currentUser.getIdToken();
+
+      final path = '/notifications.json';
+      var params = {
+        'orderBy': '\"playerId\"',
+        'equalTo': '\"$playerId\"',
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/fetchPlayerNotifications] GET to ${uri.toString().substring(0, 200)}');
+      final response = await http.get(uri);
+      print(
+          '[FirebaseHelper/fetchPlayerNotifications] resolved to ${response.body.toString()}');
+
+      final map = json.decode(response.body);
+
+      return List<CustomNotification>.from(map
+          .map((k, v) => MapEntry(k, CustomNotification.fromMap(k, v)))
+          .values);
+    }
+  }
+
+  static Future<List<CustomNotification>> fetchGameNotifications(
+      String gameId) async {
+    {
+      final _authToken = await _auth.currentUser.getIdToken();
+
+      final path = '/notifications.json';
+      var params = {
+        'orderBy': '\"gameId\"',
+        'equalTo': '\"$gameId\"',
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/fetchPlayerNotifications] GET to ${uri.toString().substring(0, 200)}');
+      final response = await http.get(uri);
+      print(
+          '[FirebaseHelper/fetchPlayerNotifications] resolved to ${response.body.toString()}');
+
+      final map = json.decode(response.body);
+
+      return List<CustomNotification>.from(map
+          .map((k, v) => MapEntry(k, CustomNotification.fromMap(k, v)))
+          .values);
+    }
+  }
+
+  static Future<CustomNotification> editNotification(
+      CustomNotification notification) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final path = '/notifications/${notification.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+    final body = json.encode(notification.asMap);
+
+    print(
+        '[FirebaseHelper/editNotification] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.patch(uri, body: body);
+
+    print(
+        '[FirebaseHelper/editNotification] resolved to ${response.body.toString()}');
+
+    return notification;
+  }
+
+  static Future<CustomNotification> addNotification(
+      CustomNotification notification) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/notifications.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+    final body = json.encode(notification.asMap);
+
+    print(
+        '[FirebaseHelper/addNotification] POST to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.post(uri, body: body);
+    print(
+        '[FirebaseHelper/addNotification] resolved to ${response.body.toString()}');
+
+    final id = json.decode(response.body)['name'];
+
+    return CustomNotification.fromMap(id, notification.asMap);
   }
 }

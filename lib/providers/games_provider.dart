@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
+import 'package:airsoft_tournament/models/notification.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
@@ -41,6 +42,17 @@ class GamesProvider extends ChangeNotifier {
 
   List<Game> get games => _games;
   List<Game> get filteredGames => _filteredGames;
+
+  Future<Game> getGameById(String id) async {
+    Game game;
+    if (_games.isNotEmpty) {
+      game = _games.firstWhere((element) => element.id == id, orElse: null);
+    }
+    if (game == null) {
+      game = await FirebaseHelper.getGameById(id);
+    }
+    return game;
+  }
 
   void filterGamesByTitleOrTeam(String query) {
     if (query != null) {
@@ -164,7 +176,8 @@ class GamesProvider extends ChangeNotifier {
       resetFilteredParticipations();
   }
 
-  Future<Game> addNewGame(Game newGame, {File image}) async {
+  Future<Game> addNewGame(Game newGame,
+      {File image, List<Player> players}) async {
     print('[GameProvider/addNewGame] title: ${newGame.title}');
 
     Game uploadedGame;
@@ -181,7 +194,23 @@ class GamesProvider extends ChangeNotifier {
     notifyListeners();
 
     // FirebaseNotificationHelper.sendNewGameNotification(uploadedGame);
+    sendNewGameNotifications(uploadedGame, players);
     return uploadedGame;
+  }
+
+  Future<void> sendNewGameNotifications(Game game, List<Player> players) async {
+    players.forEach((element) {
+      FirebaseHelper.addNotification(CustomNotification(
+        title: 'Nuova giocata',
+        description: 'Inserisci la presenza per la nuova giocata ${game.title}',
+        playerId: element.id,
+        gameId: game.id,
+        read: false,
+        type: notificationType.new_game,
+        creationDate: DateTime.now(),
+        expirationDate: game.date,
+      ));
+    });
   }
 
   Future<void> fetchAndSetGames(String teamId, bool forceRefresh) async {
@@ -337,7 +366,8 @@ class GamesProvider extends ChangeNotifier {
     // await FirebaseHelper.deleteParticipationsForGame(game);
   }
 
-  Future<Game> editGame(Game game, String oldImageUrl, {File image}) async {
+  Future<Game> editGame(Game game, String oldImageUrl,
+      {File image, List<Player> players}) async {
     print('[GameProvider/addNewGame] title: ${game.title}');
 
     var newGame = await FirebaseHelper.editGame(game, oldImageUrl, image);

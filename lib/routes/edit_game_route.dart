@@ -122,10 +122,12 @@ class _EditGameRouteState extends State<EditGameRoute> {
       try {
         if (!isEditing)
           newGame = await Provider.of<GamesProvider>(context, listen: false)
-              .addNewGame(newGame, image: newImage);
+              .addNewGame(newGame,
+                  image: newImage, players: _loggedTeam.players);
         else
           newGame = await Provider.of<GamesProvider>(context, listen: false)
-              .editGame(newGame, oldImageUrl, image: newImage);
+              .editGame(newGame, oldImageUrl,
+                  image: newImage, players: _loggedTeam.players);
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -140,7 +142,7 @@ class _EditGameRouteState extends State<EditGameRoute> {
         Navigator.of(context).pop(newGame);
       else
         Navigator.of(context).pushReplacementNamed(GameDetailRoute.routeName,
-            arguments: newGame);
+            arguments: newGame.id);
     }
   }
 

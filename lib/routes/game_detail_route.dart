@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:airsoft_tournament/helpers/map_opener.dart';
 import 'package:airsoft_tournament/widgets/dialogs/confirmation_dialog.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:airsoft_tournament/constants/style.dart';
@@ -32,16 +33,22 @@ class GameDetailRoute extends StatefulWidget {
 class _GameDetailRouteState extends State<GameDetailRoute> {
   Player loggedPlayer;
   Game game;
+  String gameId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final Game gameFromPop = ModalRoute.of(context).settings.arguments;
-    game = gameFromPop ?? game;
+
+    gameId = ModalRoute.of(context).settings.arguments;
+    final games = Provider.of<GamesProvider>(context, listen: false).games;
+
+    if (games.isNotEmpty)
+      game = games.firstWhere((element) => element.id == gameId, orElse: null);
+
     loggedPlayer =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
-    Provider.of<GamesProvider>(context, listen: false)
-        .fetchAndSetGameParticipations(game, []);
+    // Provider.of<GamesProvider>(context, listen: false)
+    //     .fetchAndSetGameParticipations(game, []);
   }
 
   void onModifyPop(Game editedGame) {
@@ -54,17 +61,27 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // appBar: AppBar(),
-      body: CustomScrollView(
-        slivers: [
-          GameCover(game, onModifyPop),
-          GameParticipations(game),
-          GameDetails(game),
-          _BottomButtons(game, loggedPlayer),
-        ],
-      ),
-    );
+    return FutureBuilder(
+        future: Provider.of<GamesProvider>(context, listen: false)
+            .getGameById(gameId),
+        builder: (context, snapshot) {
+          game = snapshot.data;
+          return Scaffold(
+            // appBar: AppBar(),
+            body: snapshot.hasData
+                ? CustomScrollView(
+                    slivers: [
+                      GameCover(snapshot.data, onModifyPop),
+                      GameParticipations(snapshot.data),
+                      GameDetails(snapshot.data),
+                      _BottomButtons(snapshot.data, loggedPlayer),
+                    ],
+                  )
+                : Center(
+                    child: CircularProgressIndicator(),
+                  ),
+          );
+        });
   }
 }
 

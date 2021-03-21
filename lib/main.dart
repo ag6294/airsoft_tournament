@@ -1,11 +1,13 @@
 import 'package:airsoft_tournament/helpers/notification_helper.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
+import 'package:airsoft_tournament/providers/notifications_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:airsoft_tournament/routes/game_detail_route.dart';
 import 'package:airsoft_tournament/routes/game_participations_route.dart';
 import 'package:airsoft_tournament/routes/home_route.dart';
 import 'package:airsoft_tournament/routes/login_route.dart';
+import 'package:airsoft_tournament/routes/notifications_route.dart';
 import 'package:airsoft_tournament/routes/player_edit_route.dart';
 import 'package:airsoft_tournament/routes/privacy_route.dart';
 import 'package:airsoft_tournament/routes/team_detail_route.dart';
@@ -52,7 +54,14 @@ class MyApp extends StatelessWidget {
           create: (context) => GamesProvider(),
         ),
         ChangeNotifierProvider<TeamsProvider>(
-            create: (context) => TeamsProvider()),
+          create: (context) => TeamsProvider(),
+        ),
+        ChangeNotifierProxyProvider<LoginProvider, NotificationsProvider>(
+          update: (context, loginProvider, previousNotificationsProvider) =>
+              previousNotificationsProvider
+                ..setLoggedPlayer(loginProvider.loggedPlayer),
+          create: (context) => NotificationsProvider(),
+        ),
       ],
       child: Consumer<LoginProvider>(
         builder: (context, authProvider, _) => MaterialApp(
@@ -84,6 +93,7 @@ class MyApp extends StatelessWidget {
             TeamPostsRoute.routeName: (context) => TeamPostsRoute(),
             PrivacyRoute.routeName: (context) => PrivacyRoute(),
             PlayerEditRoute.routeName: (context) => PlayerEditRoute(),
+            NotificationsRoute.routeName: (context) => NotificationsRoute(),
           },
         ),
       ),

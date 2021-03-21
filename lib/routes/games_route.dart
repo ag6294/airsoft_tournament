@@ -128,7 +128,7 @@ class GameCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.of(context)
-          .pushNamed(GameDetailRoute.routeName, arguments: game),
+          .pushNamed(GameDetailRoute.routeName, arguments: game.id),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Card(
