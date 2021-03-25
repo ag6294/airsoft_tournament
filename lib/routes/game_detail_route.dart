@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:airsoft_tournament/helpers/map_opener.dart';
+import 'package:airsoft_tournament/providers/game_provider.dart';
+import 'package:airsoft_tournament/routes/game_invitations_route.dart';
 import 'package:airsoft_tournament/widgets/dialogs/confirmation_dialog.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -361,6 +363,20 @@ class MenuPopUp extends StatelessWidget {
             },
           ),
           child: Text('Elimina'),
+        ),
+      if (Provider.of<LoginProvider>(context, listen: false)
+              .loggedPlayer
+              .isGM &&
+          Provider.of<LoginProvider>(context, listen: false)
+                  .loggedPlayer
+                  .teamId ==
+              game.hostTeamId)
+        PopupMenuItem(
+          value: () {
+            Navigator.of(context)
+                .pushNamed(GameInvitationsRoute.routeName, arguments: game);
+          },
+          child: Text('Invita altri Team'),
         ),
     ];
 

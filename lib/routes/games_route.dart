@@ -1,4 +1,5 @@
 import 'package:airsoft_tournament/constants/style.dart';
+import 'package:airsoft_tournament/providers/game_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/routes/edit_game_route.dart';
 import 'package:airsoft_tournament/routes/game_detail_route.dart';

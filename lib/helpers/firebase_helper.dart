@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:airsoft_tournament/constants/exceptions.dart';
+import 'package:airsoft_tournament/models/game_invitation.dart';
 import 'package:airsoft_tournament/models/notification.dart';
 import 'package:airsoft_tournament/models/team_post.dart';
 import 'package:path/path.dart' as ph;
@@ -924,5 +925,114 @@ class FirebaseHelper {
     final id = json.decode(response.body)['name'];
 
     return CustomNotification.fromMap(id, notification.asMap);
+  }
+
+  static Future<List<GameInvitation>> fetchTeamInvitations(
+      String teamId) async {
+    {
+      final _authToken = await _auth.currentUser.getIdToken();
+
+      final path = '/invitations.json';
+      var params = {
+        'orderBy': '\"teamId\"',
+        'equalTo': '\"$teamId\"',
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/fetchTeamInvitations] GET to ${uri.toString().substring(0, 200)}');
+      final response = await http.get(uri);
+      print(
+          '[FirebaseHelper/fetchTeamInvitations] resolved to ${response.body.toString()}');
+
+      final map = json.decode(response.body);
+
+      return List<GameInvitation>.from(
+          map.map((k, v) => MapEntry(k, GameInvitation.fromMap(k, v))).values);
+    }
+  }
+
+  static Future<List<GameInvitation>> fetchGameInvitations(
+      String gameId) async {
+    {
+      final _authToken = await _auth.currentUser.getIdToken();
+
+      final path = '/invitations.json';
+      var params = {
+        'orderBy': '\"gameId\"',
+        'equalTo': '\"$gameId\"',
+        'auth': _authToken,
+      };
+      var uri = Uri.https(authority, path, params);
+
+      print(
+          '[FirebaseHelper/fetchGameInvitations] GET to ${uri.toString().substring(0, 200)}');
+      final response = await http.get(uri);
+      print(
+          '[FirebaseHelper/fetchGameInvitations] resolved to ${response.body.toString()}');
+
+      final map = json.decode(response.body);
+
+      return List<GameInvitation>.from(
+          map.map((k, v) => MapEntry(k, GameInvitation.fromMap(k, v))).values);
+    }
+  }
+
+  static Future<GameInvitation> editInvitation(
+      GameInvitation invitation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+    final path = '/notifications/${invitation.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+    final body = json.encode(invitation.asMap);
+
+    print(
+        '[FirebaseHelper/editInvitation] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.patch(uri, body: body);
+
+    print(
+        '[FirebaseHelper/editInvitation] resolved to ${response.body.toString()}');
+
+    return invitation;
+  }
+
+  static Future<GameInvitation> addInvitation(GameInvitation invitation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/invitations.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+    final body = json.encode(invitation.asMap);
+
+    print(
+        '[FirebaseHelper/addInvitation] POST to ${uri.toString().substring(0, 200)}, body = $body');
+    final response = await http.post(uri, body: body);
+    print(
+        '[FirebaseHelper/addInvitation] resolved to ${response.body.toString()}');
+
+    final id = json.decode(response.body)['name'];
+
+    return GameInvitation.fromMap(id, invitation.asMap);
+  }
+
+  static Future<void> deleteInvitation(GameInvitation invitation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/invitations/${invitation.id}.json';
+    var params = {
+      'auth': _authToken,
+    };
+    var uri = Uri.https(authority, path, params);
+
+    print(
+        '[FirebaseHelper/deleteInvitation] DELETE to ${uri.toString().substring(0, 200)}');
+    var response = await http.delete(uri);
+    print(
+        '[FirebaseHelper/deleteInvitation]resolved to ${json.decode(response.body)}');
   }
 }

@@ -219,10 +219,13 @@ class GamesProvider extends ChangeNotifier {
       //TODO fare controllo non con teamId ma con loggedUser team id se mettiamo la lsita delle giocate nella pagina del team
       _games = await FirebaseHelper.fetchFutureGames();
 
-      print(games);
-
-      _games.removeWhere(
-          (element) => element.hostTeamId != teamId && element.isPrivate);
+      //todo ripristinare
+      // for (Game g in _games) {
+      //   await g.fetchAndSetInvitations();
+      // // }
+      //
+      // _games.removeWhere(
+      //     (element) => (!element.isInvited(teamId) && element.isPrivate));
 
       print(games);
 
