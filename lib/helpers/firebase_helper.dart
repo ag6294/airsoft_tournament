@@ -311,8 +311,11 @@ class FirebaseHelper {
       };
       var uri = Uri.https(authority, path, params);
 
+      print('[FirebaseHelper/fetchTeams] GET $uri');
       final response = await http.get(uri);
       Map<String, dynamic> decodedResponse = json.decode(response.body);
+
+      print('[FirebaseHelper/fetchTeams] resolved in $decodedResponse');
 
       return decodedResponse != null
           ? decodedResponse
@@ -1033,6 +1036,6 @@ class FirebaseHelper {
         '[FirebaseHelper/deleteInvitation] DELETE to ${uri.toString().substring(0, 200)}');
     var response = await http.delete(uri);
     print(
-        '[FirebaseHelper/deleteInvitation]resolved to ${json.decode(response.body)}');
+        '[FirebaseHelper/deleteInvitation]resolved to ${response.statusCode}');
   }
 }
