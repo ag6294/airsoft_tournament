@@ -3,7 +3,6 @@ import 'package:airsoft_tournament/helpers/map_opener.dart';
 import 'package:airsoft_tournament/providers/game_provider.dart';
 import 'package:airsoft_tournament/routes/game_invitations_route.dart';
 import 'package:airsoft_tournament/widgets/dialogs/confirmation_dialog.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:airsoft_tournament/constants/style.dart';
@@ -49,8 +48,8 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
 
     loggedPlayer =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
-    // Provider.of<GamesProvider>(context, listen: false)
-    //     .fetchAndSetGameParticipations(game, []);
+    Provider.of<GamesProvider>(context, listen: false)
+        .fetchAndSetLoggedUserParticipations(loggedPlayer.id);
   }
 
   void onModifyPop(Game editedGame) {
@@ -63,27 +62,32 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: Provider.of<GamesProvider>(context, listen: false)
-            .getGameById(gameId),
-        builder: (context, snapshot) {
-          game = snapshot.data;
-          return Scaffold(
-            // appBar: AppBar(),
-            body: snapshot.hasData
-                ? CustomScrollView(
-                    slivers: [
-                      GameCover(snapshot.data, onModifyPop),
-                      GameParticipations(snapshot.data),
-                      GameDetails(snapshot.data),
-                      _BottomButtons(snapshot.data, loggedPlayer),
-                    ],
-                  )
-                : Center(
-                    child: CircularProgressIndicator(),
-                  ),
-          );
-        });
+    return ChangeNotifierProvider<GameProvider>(
+      create: (context) => GameProvider(game)
+        ..fetchAndSetInvitations()
+        ..fetchAndSetGameParticipations(),
+      child: FutureBuilder(
+          future: Provider.of<GamesProvider>(context, listen: false)
+              .getGameById(gameId),
+          builder: (context, snapshot) {
+            game = snapshot.data;
+            return Scaffold(
+              // appBar: AppBar(),
+              body: snapshot.hasData
+                  ? CustomScrollView(
+                      slivers: [
+                        GameCover(snapshot.data, onModifyPop),
+                        GameParticipations(snapshot.data),
+                        GameDetails(snapshot.data),
+                        _BottomButtons(snapshot.data, loggedPlayer),
+                      ],
+                    )
+                  : Center(
+                      child: CircularProgressIndicator(),
+                    ),
+            );
+          }),
+    );
   }
 }
 
@@ -180,146 +184,172 @@ class GameParticipations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<GamesProvider>(
-      builder: (context, gamesProvider, _) {
-        final Player player =
-            Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
-        final gameParticipations = gamesProvider.gameParticipations;
+    return Consumer<GameProvider>(
+        builder: (context, gameProvider, _) => Consumer<GamesProvider>(
+              builder: (context, gamesProvider, _) {
+                final Player player =
+                    Provider.of<LoginProvider>(context, listen: false)
+                        .loggedPlayer;
+                final userParticipations =
+                    gamesProvider.loggedUserParticipations;
 
-        final hasReplied = gameParticipations.isEmpty
-            ? false
-            : gameParticipations.indexWhere(((p) => p.playerId == player.id)) >
-                -1;
-        final playerParticipation = hasReplied
-            ? gameParticipations.where((p) => p.playerId == player.id).first
-            : null;
-        final isGoing = hasReplied ? playerParticipation.isGoing : false;
-        final isMyTeamGame = player.teamId.compareTo(game.hostTeamId) == 0;
+                final hasReplied = userParticipations.isEmpty
+                    ? false
+                    : userParticipations
+                            .indexWhere(((p) => p.gameId == game.id)) >
+                        -1;
+                final playerParticipation = hasReplied
+                    ? userParticipations.where((p) => p.gameId == game.id).first
+                    : null;
+                final isGoing =
+                    hasReplied ? playerParticipation.isGoing : false;
+                final isPlayerInvited =
+                    player.teamId.compareTo(game.hostTeamId) == 0 ||
+                        gameProvider.isTeamInvited(player.teamId);
 
-        return SliverList(
-          delegate: SliverChildListDelegate(
-            [
-              if (!DateTime.now().isAfter(game.date) && isMyTeamGame)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Parteciperai?',
-                            style: kMediumText,
-                          ),
+                return SliverList(
+                  delegate: SliverChildListDelegate(
+                    [
+                      if (!DateTime.now().isAfter(game.date) && isPlayerInvited)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Parteciperai?',
+                                    style: kMediumText,
+                                  ),
+                                ),
+                                ToggleButtons(
+                                  renderBorder: true,
+                                  borderWidth: 10,
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderColor:
+                                      Theme.of(context).scaffoldBackgroundColor,
+                                  selectedBorderColor:
+                                      Theme.of(context).scaffoldBackgroundColor,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: Text(
+                                        'Parteciperò',
+                                        style: hasReplied && isGoing
+                                            ? kMediumText
+                                            : TextStyle(),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                      child: Text(
+                                        'Non parteciperò',
+                                        style: hasReplied && !isGoing
+                                            ? kMediumText
+                                            : TextStyle(),
+                                      ),
+                                    ),
+                                  ],
+                                  isSelected: [
+                                    hasReplied && isGoing,
+                                    hasReplied && !isGoing,
+                                  ],
+                                  onPressed: (i) {
+                                    if (i == 0 && hasReplied && isGoing) return;
+                                    if (i == 1 && hasReplied && !isGoing)
+                                      return;
+
+                                    final newParticipation = GameParticipation(
+                                      id: playerParticipation?.id,
+                                      gameId: game.id,
+                                      gameName: game.title,
+                                      isGoing: i == 0,
+                                      playerId: player.id,
+                                      playerName: player.nickname,
+                                      gameTeamId: game.hostTeamId,
+                                      gameTeamName: game.hostTeamName,
+                                      playerTeamId: player.teamId,
+                                      playerTeamName: player.teamName,
+                                    );
+
+                                    if (!hasReplied) {
+                                      gameProvider
+                                          .addParticipation(newParticipation)
+                                          .then((value) =>
+                                              Provider.of<GamesProvider>(
+                                                      context,
+                                                      listen: false)
+                                                  .addLoggedUserParticipation(
+                                                      value));
+                                    } else {
+                                      gameProvider
+                                          .editParticipation(newParticipation);
+                                      Provider.of<GamesProvider>(context,
+                                              listen: false)
+                                          .editLoggedUserParticipation(
+                                              newParticipation);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            // Padding(
+                            //   padding: const EdgeInsets.all(8.0),
+                            //   child: Text(
+                            //       'Parteciperanno alla giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
+                            // ),
+                          ],
                         ),
-                        ToggleButtons(
-                          renderBorder: true,
-                          borderWidth: 10,
-                          borderRadius: BorderRadius.circular(24),
-                          borderColor:
-                              Theme.of(context).scaffoldBackgroundColor,
-                          selectedBorderColor:
-                              Theme.of(context).scaffoldBackgroundColor,
+                      if (!DateTime.now().isAfter(game.date) &&
+                          !isPlayerInvited)
+                        Row(
+                          children: [
+                            TeamPageButton(game),
+                          ],
+                        ),
+                      if (DateTime.now().isAfter(game.date) && isPlayerInvited)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                'Parteciperò',
-                                style: hasReplied && isGoing
-                                    ? kMediumText
-                                    : TextStyle(),
+                                !hasReplied
+                                    ? 'Non hai risposto alla giocata'
+                                    : isGoing
+                                        ? 'Hai partecipato a questa giocata'
+                                        : 'Non hai partecipato a questa giocata',
+                                style: kMediumText,
                               ),
                             ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Text(
-                                'Non parteciperò',
-                                style: hasReplied && !isGoing
-                                    ? kMediumText
-                                    : TextStyle(),
-                              ),
-                            ),
+                            // Text(
+                            //     'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
                           ],
-                          isSelected: [
-                            hasReplied && isGoing,
-                            hasReplied && !isGoing,
-                          ],
-                          onPressed: (i) {
-                            if (i == 0 && hasReplied && isGoing) return;
-                            if (i == 1 && hasReplied && !isGoing) return;
-
-                            final newParticipation = GameParticipation(
-                              id: playerParticipation?.id,
-                              gameId: game.id,
-                              gameName: game.title,
-                              isGoing: i == 0,
-                              playerId: player.id,
-                              playerName: player.nickname,
-                            );
-
-                            // playerParticipation = newParticipation;
-                            // hasReplied = true;
-                            gamesProvider.editParticipation(
-                                newParticipation, true);
-                          },
                         ),
-                      ],
-                    ),
-                    // Padding(
-                    //   padding: const EdgeInsets.all(8.0),
-                    //   child: Text(
-                    //       'Parteciperanno alla giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
-                    // ),
-                  ],
-                ),
-              if (!DateTime.now().isAfter(game.date) && !isMyTeamGame)
-                Row(
-                  children: [
-                    TeamPageButton(game),
-                  ],
-                ),
-              if (DateTime.now().isAfter(game.date) && isMyTeamGame)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        !hasReplied
-                            ? 'Non hai risposto alla giocata'
-                            : isGoing
-                                ? 'Hai partecipato a questa giocata'
-                                : 'Non hai partecipato a questa giocata',
-                        style: kMediumText,
-                      ),
-                    ),
-                    // Text(
-                    //     'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
-                  ],
-                ),
-              if (DateTime.now().isAfter(game.date) && !isMyTeamGame)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'La giocata è scaduta',
-                        style: kMediumText,
-                      ),
-                    ),
-                    // Text(
-                    //     'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
-                  ],
-                ),
-            ],
-          ),
-        );
-      },
-    );
+                      if (DateTime.now().isAfter(game.date) && !isPlayerInvited)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'La giocata è scaduta',
+                                style: kMediumText,
+                              ),
+                            ),
+                            // Text(
+                            //     'Hanno partecipato a questa giocata ${gameParticipations.where((p) => p.isGoing).length} giocatori!'),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ));
   }
 }
 
@@ -373,8 +403,8 @@ class MenuPopUp extends StatelessWidget {
               game.hostTeamId)
         PopupMenuItem(
           value: () {
-            Navigator.of(context)
-                .pushNamed(GameInvitationsRoute.routeName, arguments: game);
+            Navigator.of(context).pushNamed(GameInvitationsRoute.routeName,
+                arguments: Provider.of<GameProvider>(context, listen: false));
           },
           child: Text('Invita altri Team'),
         ),
@@ -402,33 +432,36 @@ class _BottomButtons extends StatelessWidget {
         [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                if (game.hostTeamId.compareTo(loggedPlayer.teamId) == 0)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pushNamed(
-                          GameParticipationsRoute.routeName,
-                          arguments: game),
-                      child: Text('Lista dei partecipanti'),
-                    ),
-                  ),
-                if (game.attachmentUrl != null && game.attachmentUrl != '')
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: () => _openAttachment(game.attachmentUrl),
-                      child: Row(
-                        children: [
-                          Icon(Icons.insert_link),
-                          SizedBox(width: 8),
-                          Text('Apri allegato'),
-                        ],
+            child: Consumer<GameProvider>(
+              builder: (context, gameProvider, _) => Row(
+                children: [
+                  if (gameProvider.isPlayerInvited(loggedPlayer))
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pushNamed(
+                            GameParticipationsRoute.routeName,
+                            arguments: Provider.of<GameProvider>(context,
+                                listen: false)),
+                        child: Text('Lista dei partecipanti'),
                       ),
                     ),
-                  ),
-              ],
+                  if (game.attachmentUrl != null && game.attachmentUrl != '')
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () => _openAttachment(game.attachmentUrl),
+                        child: Row(
+                          children: [
+                            Icon(Icons.insert_link),
+                            SizedBox(width: 8),
+                            Text('Apri allegato'),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],

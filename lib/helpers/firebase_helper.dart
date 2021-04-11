@@ -270,17 +270,17 @@ class FirebaseHelper {
   }
 
   static Future<Player> addCurrentPlayerToTeam(
-      String teamId, Player loggedPlayer) async {
+      Team team, Player loggedPlayer) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
     //todo remove team update
-    var path = '/teams/$teamId/players.json';
+    var path = '/teams/${team.id}/players.json';
     var params = {
       'auth': _authToken,
     };
     var uri = Uri.https(authority, path, params);
     print(
-        '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: $teamId ');
+        '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: ${team.id} ');
 
     await http.patch(uri,
         body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
@@ -291,13 +291,18 @@ class FirebaseHelper {
     };
     uri = Uri.https(authority, path, params);
     await http.patch(uri,
-        body: json.encode({'teamId': teamId, 'isGM': loggedPlayer.isGM}));
+        body: json.encode({
+          'teamId': team.id,
+          'teamName': team.name,
+          'isGM': loggedPlayer.isGM
+        }));
 
     return Player(
       id: loggedPlayer.id,
       email: loggedPlayer.email,
       nickname: loggedPlayer.nickname,
-      teamId: teamId,
+      teamId: team.id,
+      teamName: team.name,
       isGM: loggedPlayer.isGM,
     );
   }
@@ -499,7 +504,7 @@ class FirebaseHelper {
     return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
   }
 
-  static Future<List<Game>> fetchFutureGames() async {
+  static Future<List<Game>> fetchFutureGamesForTeam(String teamId) async {
     final _authToken = await _auth.currentUser.getIdToken();
     final dataString =
         DateTime.now().subtract(Duration(days: 7)).toIso8601String();
@@ -519,7 +524,16 @@ class FirebaseHelper {
 
     print('[FirebaseHelper/fetchFutureGames] GET  /games resolved to $map');
 
-    return map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
+    final invitations = await fetchTeamInvitations(teamId);
+    final invitedGamesId = invitations.map((e) => e.gameId);
+
+    final games =
+        map.map((k, v) => MapEntry(k, Game.fromMap(k, v))).values.toList();
+    games.removeWhere((element) => (element.hostTeamId != teamId &&
+        !invitedGamesId.contains(element.id) &&
+        element.isPrivate));
+
+    return games;
   }
 
   static Future<List<GameParticipation>> fetchUserParticipations(
@@ -643,32 +657,46 @@ class FirebaseHelper {
     final participations = await fetchGameParticipations(game.id);
 
     participations.forEach((element) {
-      final path = '/participations/${element.id}.json';
-      final params = {
-        'auth': _authToken,
-      };
-      final uri = Uri.https(authority, path, params);
-
-      print(
-          '[FirebaseHelper/deleteGame] DELETE to ${uri.toString().substring(0, 200)}');
-      http.delete(uri).then((value) => print(
-          '[FirebaseHelper/deleteGame] DELETE resolved in ${value.statusCode.toString()}'));
+      deleteParticipation(element);
     });
 
     final notifications = await fetchGameNotifications(game.id);
 
-    participations.forEach((element) {
-      final path = '/notifications/${element.id}.json';
-      final params = {
-        'auth': _authToken,
-      };
-      final uri = Uri.https(authority, path, params);
-
-      print(
-          '[FirebaseHelper/deleteGame] DELETE to ${uri.toString().substring(0, 200)}');
-      http.delete(uri).then((value) => print(
-          '[FirebaseHelper/deleteGame] DELETE resolved in ${value.statusCode.toString()}'));
+    notifications.forEach((element) {
+      deleteNotification(element);
     });
+  }
+
+  static Future<void> deleteParticipation(
+      GameParticipation participation) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/participations/${participation.id}.json';
+    final params = {
+      'auth': _authToken,
+    };
+    final uri = Uri.https(authority, path, params);
+
+    print(
+        '[FirebaseHelper/deleteParticipation] DELETE to ${uri.toString().substring(0, 200)}');
+    http.delete(uri).then((value) => print(
+        '[FirebaseHelper/deleteParticipation] DELETE resolved in ${value.statusCode.toString()}'));
+  }
+
+  static Future<void> deleteNotification(
+      CustomNotification notification) async {
+    final _authToken = await _auth.currentUser.getIdToken();
+
+    final path = '/notifications/${notification.id}.json';
+    final params = {
+      'auth': _authToken,
+    };
+    final uri = Uri.https(authority, path, params);
+
+    print(
+        '[FirebaseHelper/deleteNotification] DELETE to ${uri.toString().substring(0, 200)}');
+    http.delete(uri).then((value) => print(
+        '[FirebaseHelper/deleteNotification] DELETE resolved in ${value.statusCode.toString()}'));
   }
 
   // static Future<void> deleteParticipationsForGame(Game game) async {

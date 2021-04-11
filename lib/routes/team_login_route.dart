@@ -6,6 +6,7 @@ import 'package:airsoft_tournament/widgets/forms/form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
+import 'package:searchable_dropdown/searchable_dropdown.dart';
 
 class TeamLoginRoute extends StatelessWidget {
   static const routeName = '/team-login';
@@ -56,23 +57,40 @@ class _TeamDropdownState extends State<TeamDropdown> {
     List<DropdownMenuItem<Team>> buttonItems = widget.teams.isNotEmpty
         ? widget.teams
             .map((e) => DropdownMenuItem<Team>(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(e.name),
-                  ),
+                  child: Text(e.name),
                   value: e,
                 ))
             .toList()
         : [];
     return Container(
-      child: DropdownButton<Team>(
-        items: buttonItems,
-        onChanged: (value) {
-          widget.onSelect(value.id);
-        },
-        value: widget.selectedTeam,
-        hint: Text('Scegli il tuo team'),
+      // child: DropdownButton<Team>(
+      //   items: buttonItems,
+      //   onChanged: (value) {
+      //     widget.onSelect(value.id);
+      //   },
+      //   value: widget.selectedTeam,
+      //   hint: Text('Scegli il tuo team'),
+      //   isExpanded: true,
+      // ),
+      child: SearchableDropdown.single(
+        hint: 'Seleziona un team',
+        searchHint: 'Cerca un team',
+        closeButton: 'Chiudi',
         isExpanded: true,
+        items: buttonItems,
+        onChanged: (value) => widget.onSelect(value.id),
+        searchFn: (keyword, items) {
+          List<int> shownIndexes = [];
+          int i = 0;
+          items.forEach((item) {
+            if (item.value.name.toLowerCase().contains(keyword.toLowerCase()) ||
+                (keyword?.isEmpty ?? true)) {
+              shownIndexes.add(i);
+            }
+            i++;
+          });
+          return (shownIndexes);
+        },
       ),
     );
   }
@@ -230,7 +248,7 @@ class __CustomFormState extends State<_CustomForm> {
                                   .createNewTeam(name: name, pwd: password1)
                               : await Provider.of<LoginProvider>(context,
                                       listen: false)
-                                  .tryTeamLogin(teamId: id);
+                                  .tryTeamLogin(team);
                         } catch (e) {
                           setState(() {
                             _isLoading = false;

@@ -50,7 +50,23 @@ class LoginProvider extends ChangeNotifier {
         '[LoginProvider/getAndSetLoggedPlayerTeam] get team ${_loggedPlayer.teamId}');
     if (loggedPlayer.teamId != null) {
       _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
-      FirebaseNotificationHelper.subscribeChannel(loggedPlayer.teamId);
+
+      //todo rimuovere dopo recupero completo dei teamName sui player
+      _loggedPlayer = Player(
+        id: loggedPlayer.id,
+        isGM: loggedPlayer.isGM,
+        nickname: loggedPlayer.nickname,
+        email: loggedPlayer.email,
+        teamId: loggedPlayer.teamId,
+        dateOfBirth: loggedPlayer.dateOfBirth,
+        lastName: loggedPlayer.lastName,
+        name: loggedPlayer.name,
+        placeOfBirth: loggedPlayer.placeOfBirth,
+        teamName: _loggedPlayerTeam.name,
+      );
+      await FirebaseHelper.updatePlayer(loggedPlayer);
+      notifyListeners();
+      // FirebaseNotificationHelper.subscribeChannel(loggedPlayer.teamId);
       // print(
       //     '[LoginProvider/getAndSetLoggedPlayerTeam] team: ${loggedPlayerTeam.asMap}');
     }
@@ -135,21 +151,22 @@ class LoginProvider extends ChangeNotifier {
         isGM: true,
         email: _loggedPlayer.email.toLowerCase(),
         nickname: _loggedPlayer.nickname,
-        teamId: loggedPlayer.teamId);
+        teamId: loggedPlayer.teamId,
+        teamName: loggedPlayer.teamName);
 
     _loggedPlayer =
-        await FirebaseHelper.addCurrentPlayerToTeam(team.id, loggedPlayer);
+        await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);
     _loggedPlayerTeam = await FirebaseHelper.getTeamById(loggedPlayer.teamId);
     notifyListeners();
   }
 
-  Future<void> tryTeamLogin({String teamId}) async {
-    print('[LoginProvider/tryTeamLogin] teamId = $teamId');
-    await FirebaseHelper.addCurrentPlayerToTeam(teamId, loggedPlayer);
+  Future<void> tryTeamLogin(Team team) async {
+    print('[LoginProvider/tryTeamLogin] teamId = ${team.id}');
+    await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);
 
     _loggedPlayer =
-        await FirebaseHelper.addCurrentPlayerToTeam(teamId, loggedPlayer);
-    _loggedPlayerTeam = await FirebaseHelper.getTeamById(teamId);
+        await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);
+    _loggedPlayerTeam = await FirebaseHelper.getTeamById(team.id);
     notifyListeners();
   }
 

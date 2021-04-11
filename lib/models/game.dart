@@ -1,5 +1,3 @@
-import 'package:airsoft_tournament/helpers/firebase_helper.dart';
-import 'package:airsoft_tournament/models/game_invitation.dart';
 import 'package:flutter/foundation.dart';
 
 class Game extends ChangeNotifier {

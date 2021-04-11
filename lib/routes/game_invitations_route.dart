@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_invitation.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/providers/game_provider.dart';
-import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/providers/team_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -22,7 +19,7 @@ class GameInvitationsRoute extends StatefulWidget {
 }
 
 class _GameInvitationsRouteState extends State<GameInvitationsRoute> {
-  Game game;
+  GameProvider game;
 
   @override
   void didChangeDependencies() {
@@ -33,8 +30,8 @@ class _GameInvitationsRouteState extends State<GameInvitationsRoute> {
   @override
   Widget build(BuildContext context) {
     allTeams = [];
-    return ChangeNotifierProvider(
-      create: (context) => GameProvider(game),
+    return ChangeNotifierProvider<GameProvider>.value(
+      value: game,
       builder: (context, _) => FutureBuilder(
         future: Future.wait([
           Provider.of<TeamsProvider>(context, listen: false)

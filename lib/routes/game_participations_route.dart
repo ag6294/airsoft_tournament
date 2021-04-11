@@ -2,6 +2,7 @@ import 'package:airsoft_tournament/constants/style.dart';
 import 'package:airsoft_tournament/models/game.dart';
 import 'package:airsoft_tournament/models/game_participation.dart';
 import 'package:airsoft_tournament/models/player.dart';
+import 'package:airsoft_tournament/providers/game_provider.dart';
 import 'package:airsoft_tournament/providers/games_provider.dart';
 import 'package:airsoft_tournament/providers/login_provider.dart';
 import 'package:airsoft_tournament/widgets/box_and_texts/kpibox.dart';
@@ -24,7 +25,7 @@ class GameParticipationsRoute extends StatefulWidget {
 class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
   Player loggedPlayer;
   bool isEditing = false;
-  Game game;
+  GameProvider game;
 
   List<Player> teamPlayers = [];
 
@@ -44,12 +45,14 @@ class _GameParticipationsRouteState extends State<GameParticipationsRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Provider.of<GamesProvider>(context, listen: false)
-          .fetchAndSetGameParticipations(game, teamPlayers),
-      builder: (context, snapshot) => ModalProgressHUD(
-        inAsyncCall: snapshot.connectionState != ConnectionState.done,
-        child: ParticipationsScaffold(game, loggedPlayer, teamPlayers),
+    return ChangeNotifierProvider.value(
+      value: game,
+      builder: (context, _) => FutureBuilder(
+        future: game.fetchAndSetGameParticipationsAndInvitedPlayers(),
+        builder: (context, snapshot) => ModalProgressHUD(
+          inAsyncCall: snapshot.connectionState != ConnectionState.done,
+          child: ParticipationsScaffold(game.game, loggedPlayer, teamPlayers),
+        ),
       ),
     );
   }
@@ -81,7 +84,7 @@ class _ParticipationsScaffoldState extends State<ParticipationsScaffold> {
             IconButton(
                 icon: !isEditing ? Icon(Icons.edit) : Icon(Icons.edit_off),
                 onPressed: () {
-                  Provider.of<GamesProvider>(context, listen: false)
+                  Provider.of<GameProvider>(context, listen: false)
                       .sortParticipations();
                   setState(() {
                     isEditing = !isEditing;
@@ -91,10 +94,10 @@ class _ParticipationsScaffoldState extends State<ParticipationsScaffold> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          Provider.of<GamesProvider>(context, listen: false)
-              .fetchAndSetGameParticipations(widget.game, widget.teamPlayers);
+          Provider.of<GameProvider>(context, listen: false)
+              .fetchAndSetGameParticipationsAndInvitedPlayers();
         },
-        child: Consumer<GamesProvider>(builder: (context, gameProvider, _) {
+        child: Consumer<GameProvider>(builder: (context, gameProvider, _) {
           final participations = gameProvider.filteredGameParticipations;
           final playersNotReplied = gameProvider.filteredNotReplyingPlayers;
           final selectedKpiIndex = gameProvider.selectedKpi;
@@ -172,7 +175,11 @@ class _ParticipationsScaffoldState extends State<ParticipationsScaffold> {
                   itemCount: participations.length + playersNotReplied.length,
                   itemBuilder: (context, index) => index < participations.length
                       ? ParticipationCard(
-                          participations[index], isEditing, widget.game)
+                          participations[index],
+                          isEditing,
+                          widget.game,
+                          key: ValueKey(participations[index].id),
+                        )
                       : PlayerNotRepliedCard(
                           playersNotReplied[index - participations.length]),
                 ),
@@ -199,7 +206,9 @@ class ParticipationCard extends StatefulWidget {
   final bool isEditing;
   final Game game;
 
-  const ParticipationCard(this.participation, this.isEditing, this.game);
+  const ParticipationCard(this.participation, this.isEditing, this.game,
+      {Key key})
+      : super(key: key);
 
   @override
   _ParticipationCardState createState() => _ParticipationCardState();
@@ -207,7 +216,7 @@ class ParticipationCard extends StatefulWidget {
 
 class _ParticipationCardState extends State<ParticipationCard> {
   List<DropdownMenuItem> factionsButtons;
-
+  String cardTitle;
   @override
   void initState() {
     super.initState();
@@ -221,6 +230,15 @@ class _ParticipationCardState extends State<ParticipationCard> {
             child: Text('Nessuna fazione'),
             value: null,
           ));
+
+    cardTitle = widget.participation.playerTeamName != null &&
+            widget.participation.playerTeamName != ''
+        ? widget.participation.isGuest
+            ? widget.participation.playerName +
+                ' (${widget.participation.playerTeamName} - Ospite)'
+            : widget.participation.playerName +
+                ' (${widget.participation.playerTeamName})'
+        : widget.participation.playerName;
   }
 
   @override
@@ -230,7 +248,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
       isThreeLine: false,
       key: ValueKey(widget.participation.id),
       title: Text(
-        widget.participation.playerName,
+        cardTitle,
         style: kBigText,
       ),
       subtitle: !widget.participation.isGoing
@@ -261,17 +279,31 @@ class _ParticipationCardState extends State<ParticipationCard> {
                       playerName: widget.participation.playerName,
                       playerId: widget.participation.playerId,
                       isGoing: widget.participation.isGoing,
+                      gameTeamId: widget.participation.gameTeamId,
+                      gameTeamName: widget.participation.gameTeamName,
+                      playerTeamId: widget.participation.playerTeamId,
+                      playerTeamName: widget.participation.playerTeamName,
+                      isGuest: widget.participation.isGuest,
                       faction: value,
                     );
 
-                    Provider.of<GamesProvider>(context, listen: false)
+                    final isLoggedUserParticipation =
+                        newParticipation.playerId ==
+                            Provider.of<LoginProvider>(context, listen: false)
+                                .loggedPlayer
+                                .id;
+
+                    Provider.of<GameProvider>(context, listen: false)
                         .editParticipation(
-                            newParticipation,
-                            newParticipation.playerId ==
-                                Provider.of<LoginProvider>(context,
-                                        listen: false)
-                                    .loggedPlayer
-                                    .id);
+                      newParticipation,
+                    );
+
+                    if (isLoggedUserParticipation) {
+                      Provider.of<GamesProvider>(context, listen: false)
+                          .editLoggedUserParticipation(
+                        newParticipation,
+                      );
+                    }
                   }),
       trailing: !widget.isEditing
           ? ParticipationIcon(widget.participation.isGoing)
@@ -285,16 +317,27 @@ class _ParticipationCardState extends State<ParticipationCard> {
                   playerName: widget.participation.playerName,
                   playerId: widget.participation.playerId,
                   isGoing: value,
+                  isGuest: widget.participation.isGoing,
                   faction: widget.participation.faction,
+                  gameTeamId: widget.participation.gameTeamId,
+                  gameTeamName: widget.participation.gameTeamName,
+                  playerTeamId: widget.participation.playerTeamId,
+                  playerTeamName: widget.participation.playerTeamName,
                 );
 
-                Provider.of<GamesProvider>(context, listen: false)
+                Provider.of<GameProvider>(context, listen: false)
                     .editParticipation(
-                        newParticipation,
-                        newParticipation.playerId ==
-                            Provider.of<LoginProvider>(context, listen: false)
-                                .loggedPlayer
-                                .id);
+                  newParticipation,
+                );
+                if (newParticipation.playerId ==
+                    Provider.of<LoginProvider>(context, listen: false)
+                        .loggedPlayer
+                        .id) {
+                  Provider.of<GamesProvider>(context, listen: false)
+                      .editLoggedUserParticipation(
+                    newParticipation,
+                  );
+                }
               }),
     );
   }
@@ -327,7 +370,9 @@ class PlayerNotRepliedCard extends StatelessWidget {
       isThreeLine: false,
       key: ValueKey(player.id),
       title: Text(
-        player.nickname,
+        player.teamName != null && player.teamName != ''
+            ? player.nickname + ' (${player.teamName})'
+            : player.nickname,
         style: kBigText,
       ),
       subtitle: Text('Non ha ancora risposto'),
@@ -345,7 +390,10 @@ class _ModalBottomSheetButton extends StatelessWidget {
       onPressed: () => showModalBottomSheet(
         isScrollControlled: true,
         context: context,
-        builder: (context) => _BottomSheetContent(game: game),
+        builder: (ctx) => _BottomSheetContent(
+          game: game,
+          gameProvider: Provider.of<GameProvider>(context, listen: false),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -361,7 +409,8 @@ class _ModalBottomSheetButton extends StatelessWidget {
 class _BottomSheetContent extends StatefulWidget {
   final Game game;
   final Player guestPlayer;
-  _BottomSheetContent({this.game, this.guestPlayer});
+  final gameProvider;
+  _BottomSheetContent({this.game, this.guestPlayer, this.gameProvider});
 
   @override
   __BottomSheetContentState createState() => __BottomSheetContentState();
@@ -421,16 +470,20 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
               .updatePlayer(player);
         }
 
-        Provider.of<GamesProvider>(context, listen: false).editParticipation(
-            GameParticipation(
-                id: null,
-                gameId: widget.game.id,
-                gameName: widget.game.title,
-                playerId: player.id,
-                playerName: player.nickname,
-                isGoing: true,
-                isGuest: true),
-            false);
+        Provider.of<GameProvider>(context, listen: false).addParticipation(
+          GameParticipation(
+              id: null,
+              gameId: widget.game.id,
+              gameName: widget.game.title,
+              playerId: player.id,
+              playerName: player.nickname,
+              gameTeamId: widget.game.hostTeamId,
+              gameTeamName: widget.game.hostTeamName,
+              playerTeamId: widget.game.hostTeamId,
+              playerTeamName: widget.game.hostTeamName,
+              isGoing: true,
+              isGuest: true),
+        );
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -448,115 +501,116 @@ class __BottomSheetContentState extends State<_BottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalProgressHUD(
-      offset: Offset(MediaQuery.of(context).size.width / 2, 100),
-      inAsyncCall: _isLoading,
-      child: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              Hero(
-                tag: 'AddParticipant',
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Aggiungi un ospite',
-                    style: kTitle,
+    return ChangeNotifierProvider<GameProvider>.value(
+      value: widget.gameProvider,
+      builder: (context, _) => ModalProgressHUD(
+        offset: Offset(MediaQuery.of(context).size.width / 2, 100),
+        inAsyncCall: _isLoading,
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Hero(
+                    tag: 'AddParticipant',
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Aggiungi un ospite',
+                        style: kTitle,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Nickname',
-                  hintText: 'Inserisci il tuo nickname',
-                  hintStyle: kFormHint,
-                ),
-                initialValue: player.nickname,
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  player.nickname = value;
-                },
-                validator: (value) => _validateText(value),
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Nome',
-                  hintText: 'Inserisci il tuo nome',
-                  hintStyle: kFormHint,
-                ),
-                initialValue: player.name,
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  player.name = value;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Cognome',
-                  hintText: 'Inserisci il tuo cognome',
-                  hintStyle: kFormHint,
-                ),
-                initialValue: player.lastName,
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  player.lastName = value;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Luogo di nascita',
-                  hintText: 'Inserisci il tuo luogo di nascita',
-                  hintStyle: kFormHint,
-                ),
-                initialValue: player.placeOfBirth,
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  player.placeOfBirth = value;
-                },
-              ),
-              TextFormField(
-                // textInputAction: TextInputAction.done
-                keyboardType: TextInputType.datetime,
-                decoration: InputDecoration(
-                  labelText: 'Data di nascita',
-                  hintText: 'Inserisci il la tua data di nascita',
-                ),
-                controller: _dateController,
-
-                onTap: () async {
-                  FocusScope.of(context).unfocus();
-                  DateTime date = player.dateOfBirth ?? DateTime(1970);
-
-                  date = await showDatePicker(
-                    context: context,
-                    initialDate: date,
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime(2100),
-                  );
-
-                  if (date != null) {
-                    _dateController.text =
-                        DateFormat('dd/MM/yyyy').format(date);
-
-                    player.dateOfBirth = date;
-                  }
-                },
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                child: ElevatedButton(
-                  onPressed: () => _saveForm(context),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Conferma'),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Nickname',
+                      hintText: 'Inserisci il tuo nickname',
+                      hintStyle: kFormHint,
+                    ),
+                    initialValue: player.nickname,
+                    textInputAction: TextInputAction.next,
+                    onSaved: (value) {
+                      player.nickname = value;
+                    },
+                    validator: (value) => _validateText(value),
                   ),
-                ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                      hintText: 'Inserisci il tuo nome',
+                      hintStyle: kFormHint,
+                    ),
+                    initialValue: player.name,
+                    textInputAction: TextInputAction.next,
+                    onSaved: (value) {
+                      player.name = value;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Cognome',
+                      hintText: 'Inserisci il tuo cognome',
+                      hintStyle: kFormHint,
+                    ),
+                    initialValue: player.lastName,
+                    textInputAction: TextInputAction.next,
+                    onSaved: (value) {
+                      player.lastName = value;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Luogo di nascita',
+                      hintText: 'Inserisci il tuo luogo di nascita',
+                      hintStyle: kFormHint,
+                    ),
+                    initialValue: player.placeOfBirth,
+                    textInputAction: TextInputAction.next,
+                    onSaved: (value) {
+                      player.placeOfBirth = value;
+                    },
+                  ),
+                  TextFormField(
+                    // textInputAction: TextInputAction.done
+                    keyboardType: TextInputType.datetime,
+                    decoration: InputDecoration(
+                      labelText: 'Data di nascita',
+                      hintText: 'Inserisci il la tua data di nascita',
+                    ),
+                    controller: _dateController,
+
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      DateTime date = player.dateOfBirth ?? DateTime(1970);
+
+                      date = await showDatePicker(
+                        context: context,
+                        initialDate: date,
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime(2100),
+                      );
+
+                      if (date != null) {
+                        _dateController.text =
+                            DateFormat('dd/MM/yyyy').format(date);
+
+                        player.dateOfBirth = date;
+                      }
+                    },
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _saveForm(context),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('Conferma'),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -586,7 +640,7 @@ class __ExportButtonState extends State<_ExportButton> {
         });
 
         try {
-          await Provider.of<GamesProvider>(context, listen: false)
+          await Provider.of<GameProvider>(context, listen: false)
               .exportParticipations(widget.game, widget.loggedPlayer.email);
           // Scaffold.of(context).showSnackBar(SnackBar(
           //   content: Text(

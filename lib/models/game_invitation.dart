@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class GameInvitation {
   final String id;
   final String teamId;

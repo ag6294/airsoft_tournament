@@ -11,7 +11,9 @@ extension notificationTypeExtension on notificationType {
             GameDetailRoute.routeName,
             arguments: notification.gameId);
       case notificationType.invitation:
-        // TODO: Handle this case.
+        return (BuildContext context) => Navigator.of(context).pushNamed(
+            GameDetailRoute.routeName,
+            arguments: notification.gameId);
         return () {};
       case notificationType.new_post:
         // TODO: Handle this case.

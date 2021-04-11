@@ -8,8 +8,9 @@ class TeamsProvider extends ChangeNotifier {
   List<TeamPost> _posts = [];
   List<Player> _members = [];
 
+  //newest on top
   List<TeamPost> get posts => List<TeamPost>.from(
-      _posts..sort((a, b) => a.creationDate.compareTo(b.creationDate)));
+      _posts..sort((a, b) => b.creationDate.compareTo(a.creationDate)));
 
   List<Player> get members => List<Player>.from(_members
     ..sort((a, b) =>
