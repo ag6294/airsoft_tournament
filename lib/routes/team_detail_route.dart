@@ -187,8 +187,9 @@ class BottomButtons extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context)
-                        .pushNamed(TeamPostsRoute.routeName, arguments: team),
+                    onPressed: () => Navigator.of(context).pushNamed(
+                        TeamPostsRoute.routeName,
+                        arguments: {'team': team}),
                     child: Text('Bacheca del team'),
                   ),
                 ),

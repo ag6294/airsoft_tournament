@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:recase/recase.dart';
 
 class Player {
   final String id;
@@ -27,7 +28,7 @@ class Player {
 
   Player.fromMap(String id, Map<String, dynamic> map)
       : this.id = id,
-        this.email = map['email'],
+        this.email = map['email'].toLowerCase(),
         this.nickname = map['nickname'],
         this.teamId = map['teamId'] ?? '',
         this.teamName = map['teamName'] ?? '',
@@ -52,12 +53,22 @@ class Player {
       };
 
   List<dynamic> get asRow => [
-        email,
-        nickname,
-        name,
-        lastName,
-        teamName,
-        placeOfBirth,
+        email?.capitalize,
+        nickname.capitalize,
+        name?.capitalizeEachWord,
+        lastName?.capitalizeEachWord,
+        placeOfBirth?.capitalizeEachWord,
         dateOfBirth == null ? '' : DateFormat('dd/MM/yyyy').format(dateOfBirth),
       ];
+}
+
+extension CapExtension on String {
+  String get capitalize => this != null && this != ''
+      ? '${this[0].toUpperCase()}${this.substring(1).toLowerCase()}'
+      : this;
+  String get capitalizeEachWord {
+    return this.contains(' ')
+        ? this.split(' ').map((e) => e.capitalize).toList().join(' ')
+        : this.capitalize;
+  }
 }

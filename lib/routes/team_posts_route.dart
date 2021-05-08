@@ -23,15 +23,26 @@ class _TeamPostsRouteState extends State<TeamPostsRoute> {
   Team team;
   Player loggedPlayer;
   Team loggedPlayerTeam;
+  String selectedPostId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    team = ModalRoute.of(context).settings.arguments;
+    team = (ModalRoute.of(context).settings.arguments
+        as Map<String, dynamic>)['team'];
+    selectedPostId = (ModalRoute.of(context).settings.arguments
+        as Map<String, dynamic>)['postId'];
+    print('selected post id: $selectedPostId');
     loggedPlayer =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayer;
     loggedPlayerTeam =
         Provider.of<LoginProvider>(context, listen: false).loggedPlayerTeam;
+
+    //Coming from notification
+    if (team == null)
+      Provider.of<TeamsProvider>(context, listen: false)
+          .fetchAndSetMembers(loggedPlayerTeam.id);
+    if (team == null) team = loggedPlayerTeam;
   }
 
   @override
@@ -61,6 +72,7 @@ class _TeamPostsRouteState extends State<TeamPostsRoute> {
                               loggedPlayer: loggedPlayer,
                               loggedPlayerTeam: loggedPlayerTeam,
                               post: posts[i],
+                              isExpanded: posts[i].id == selectedPostId,
                             ),
                           );
                   },
@@ -78,14 +90,20 @@ class PostCard extends StatelessWidget {
   final TeamPost post;
   final Team loggedPlayerTeam;
   final Player loggedPlayer;
+  final bool isExpanded;
 
-  PostCard({this.post, this.loggedPlayerTeam, this.loggedPlayer});
+  PostCard(
+      {this.post,
+      this.loggedPlayerTeam,
+      this.loggedPlayer,
+      this.isExpanded = false});
 
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       expandedAlignment: Alignment.topLeft,
+      initiallyExpanded: isExpanded,
       subtitle: Text(DateFormat('dd/MM/yyyy').format(post.creationDate)),
       title: Text(
         post.title,

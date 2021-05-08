@@ -647,11 +647,13 @@ class __ExportButtonState extends State<_ExportButton> {
           //       'Abbiamo inviato la lista dei partecipanti al tuo indirizzo email'),
           //   duration: Duration(seconds: 5),
           // ));
-        } catch (e) {
+        } catch (e, s) {
           setState(() {
             isLoading = false;
           });
           exc.showCustomErrorDialog(context, e.toString());
+          print(e.toString());
+          print(s.toString());
         }
 
         setState(() {

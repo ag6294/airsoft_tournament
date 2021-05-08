@@ -102,7 +102,7 @@ class PlayerTile extends StatelessWidget {
                   nickname: player.nickname,
                   id: player.id,
                   isGM: value,
-                  name: player.email,
+                  name: player.name,
                   teamId: player.teamId,
                   teamName: player.teamName,
                   dateOfBirth: player.dateOfBirth,

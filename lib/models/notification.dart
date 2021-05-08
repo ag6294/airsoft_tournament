@@ -1,4 +1,5 @@
 import 'package:airsoft_tournament/routes/game_detail_route.dart';
+import 'package:airsoft_tournament/routes/team_posts_route.dart';
 import 'package:flutter/material.dart';
 
 enum notificationType { new_game, invitation, new_post }
@@ -14,10 +15,10 @@ extension notificationTypeExtension on notificationType {
         return (BuildContext context) => Navigator.of(context).pushNamed(
             GameDetailRoute.routeName,
             arguments: notification.gameId);
-        return () {};
       case notificationType.new_post:
-        // TODO: Handle this case.
-        return () {};
+        return (BuildContext context) => Navigator.of(context).pushNamed(
+            TeamPostsRoute.routeName,
+            arguments: {'postId': notification.postId});
       default:
         return () {};
     }
@@ -32,6 +33,7 @@ class CustomNotification {
   final notificationType type;
   final bool read;
   final String gameId;
+  final String postId;
   final DateTime creationDate;
   final DateTime expirationDate;
 
@@ -43,6 +45,7 @@ class CustomNotification {
       this.type,
       this.read,
       this.gameId,
+      this.postId,
       this.creationDate,
       this.expirationDate});
 
@@ -54,6 +57,7 @@ class CustomNotification {
         this.type = notificationType.values[map['type']],
         this.read = map['read'],
         this.gameId = map['gameId'],
+        this.postId = map['postId'],
         this.creationDate = DateTime.tryParse(map['creationDate']),
         this.expirationDate = DateTime.tryParse(map['expirationDate']);
 
@@ -64,6 +68,7 @@ class CustomNotification {
         'read': read,
         'playerId': playerId,
         'gameId': gameId,
+        'postId': postId,
         'expirationDate': expirationDate.toIso8601String(),
         'creationDate': creationDate.toIso8601String(),
       };

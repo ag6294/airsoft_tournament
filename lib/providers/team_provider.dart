@@ -1,4 +1,5 @@
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
+import 'package:airsoft_tournament/models/notification.dart';
 import 'package:airsoft_tournament/models/player.dart';
 import 'package:airsoft_tournament/models/team.dart';
 import 'package:airsoft_tournament/models/team_post.dart';
@@ -58,6 +59,7 @@ class TeamsProvider extends ChangeNotifier {
       //new
       final newPost = await FirebaseHelper.addTeamPost(post);
       _posts.add(newPost);
+      sendNewPostNotifications(newPost, _members);
     } else {
       //edit
       final newPost = await FirebaseHelper.editTeamPost(post);
@@ -66,6 +68,22 @@ class TeamsProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> sendNewPostNotifications(
+      TeamPost post, List<Player> players) async {
+    players.forEach((element) {
+      FirebaseHelper.addNotification(CustomNotification(
+        title: 'Nuova post in bacheca',
+        description: 'E\' stato creato un nuovo post: ${post.title}',
+        playerId: element.id,
+        postId: post.id,
+        read: false,
+        type: notificationType.new_post,
+        creationDate: DateTime.now(),
+        expirationDate: DateTime.now().add(Duration(days: 30)),
+      ));
+    });
   }
 
   Future<void> deletePost(TeamPost post) async {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:intl/intl.dart';
 
 import 'package:airsoft_tournament/helpers/firebase_helper.dart';
 import 'package:airsoft_tournament/models/game.dart';
@@ -125,20 +126,22 @@ class GameProvider extends ChangeNotifier {
 
     final rows = players?.map((e) => e.asRow)?.toList();
     rows?.insert(0, [
-      'email',
-      'nickname',
-      'name',
-      'lastName',
-      'placeOfBirth',
-      'dateOfBirth',
+      'Email',
+      'Nickname',
+      'Nome',
+      'Cognome',
+      'Luogo di nascita',
+      'Data di nascita',
     ]);
 
     final csv = ListToCsvConverter().convert(rows);
     file.writeAsString(csv);
 
     final Email email = Email(
-      body: 'In allegato la lista dei presenti per la giocata ${game.title}',
-      subject: '${game.title} - presenze ${DateTime.now().toString()}',
+      body:
+          'In allegato la lista dei presenti per la giocata ${game.title} del ${DateFormat('dd/MM/yyyy').format(game.date)}',
+      subject:
+          '${DateFormat('dd/MM/yyyy').format(game.date)} ${game.title} - Presenti',
       recipients: [loggedPlayerEmail],
       isHTML: true,
       attachmentPaths: [filePath],
