@@ -106,4 +106,23 @@ class TeamsProvider extends ChangeNotifier {
     _members.insert(index, player);
     notifyListeners();
   }
+
+  Future<void> removeMemberFromTeam(Player player) async {
+    Player updatedPlayer = Player(
+      email: player.email,
+      nickname: player.nickname,
+      id: player.id,
+      isGM: player.isGM,
+      name: player.name,
+      teamId: null,
+      teamName: null,
+      dateOfBirth: player.dateOfBirth,
+      lastName: player.lastName,
+      placeOfBirth: player.placeOfBirth,
+    );
+    FirebaseHelper.updatePlayer(updatedPlayer);
+    final index = _members.indexWhere((element) => element.id == player.id);
+    _members.removeAt(index);
+    notifyListeners();
+  }
 }

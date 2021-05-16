@@ -26,7 +26,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseNotificationHelper.init();
-  runApp(MyApp());
+  runApp(RootRestorationScope(restorationId: 'root', child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

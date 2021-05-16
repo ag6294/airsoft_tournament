@@ -90,27 +90,63 @@ class PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(player.nickname),
+      title: Text(
+        "${player.nickname} - ${player.email}",
+      ),
       subtitle: Text(player.isGM ? 'Game Maker' : 'Associato'),
       dense: true,
       trailing: isEditing && !(player.id.compareTo(loggedPlayer.id) == 0)
-          ? Switch(
-              onChanged: (value) {
-                Provider.of<TeamsProvider>(context, listen: false)
-                    .updateTeamMember(Player(
-                  email: player.email,
-                  nickname: player.nickname,
-                  id: player.id,
-                  isGM: value,
-                  name: player.name,
-                  teamId: player.teamId,
-                  teamName: player.teamName,
-                  dateOfBirth: player.dateOfBirth,
-                  lastName: player.lastName,
-                  placeOfBirth: player.placeOfBirth,
-                ));
-              },
-              value: player.isGM,
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Switch(
+                  onChanged: (value) {
+                    Provider.of<TeamsProvider>(context, listen: false)
+                        .updateTeamMember(Player(
+                      email: player.email,
+                      nickname: player.nickname,
+                      id: player.id,
+                      isGM: value,
+                      name: player.name,
+                      teamId: player.teamId,
+                      teamName: player.teamName,
+                      dateOfBirth: player.dateOfBirth,
+                      lastName: player.lastName,
+                      placeOfBirth: player.placeOfBirth,
+                    ));
+                  },
+                  value: player.isGM,
+                ),
+                IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext context) => AlertDialog(
+                          title: const Text('Attenzione'),
+                          content: Text(
+                              'Stai per rimuovere ${player.nickname} dal tuo team, sei sicuro di voler procedere?'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Annulla'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                'Conferma',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).then((value) {
+                        if (value)
+                          Provider.of<TeamsProvider>(context, listen: false)
+                              .removeMemberFromTeam(player);
+                      });
+                    })
+              ],
             )
           : null,
     );
