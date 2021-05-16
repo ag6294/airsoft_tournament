@@ -354,12 +354,12 @@ class GameProvider extends ChangeNotifier {
       final tempParticipation =
           GameParticipation.fromMap(tempId, participation.asMap);
       _gameParticipations.add(tempParticipation);
-
-      filterAgainParticipations();
       notifyListeners();
 
+      filterAgainParticipations();
+
       print(
-          '[GameProvider/editParticipation] added tempParticipation ${tempParticipation.asMap}');
+          '[GameProvider/addParticipation] added tempParticipation ${tempParticipation.asMap}');
 
       final uploadedParticipation =
           await FirebaseHelper.addNewParticipation(participation);

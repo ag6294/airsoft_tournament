@@ -20,8 +20,7 @@ class LoginProvider extends ChangeNotifier {
   }
 
   bool get hasTeam {
-    print('[LoginProvider/isLogged] : ${!(_loggedPlayer == null)}');
-    return !(_loggedPlayer.teamId == null);
+    return !(_loggedPlayer.teamId == null || _loggedPlayer.teamId == '');
   }
 
   Player get loggedPlayer => _loggedPlayer;
@@ -132,9 +131,8 @@ class LoginProvider extends ChangeNotifier {
   Future<void> logOut() async {
     await SharedPreferencesHelper.logout();
     await FirebaseHelper.userLogout();
-    FirebaseNotificationHelper.logout(loggedPlayer.teamId);
+    await FirebaseNotificationHelper.logout(loggedPlayer.teamId);
     _loggedPlayer = null;
-    _loggedPlayerTeam = null;
     notifyListeners();
   }
 
@@ -162,7 +160,7 @@ class LoginProvider extends ChangeNotifier {
 
   Future<void> tryTeamLogin(Team team) async {
     print('[LoginProvider/tryTeamLogin] teamId = ${team.id}');
-    await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);
+    // await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);
 
     _loggedPlayer =
         await FirebaseHelper.addCurrentPlayerToTeam(team, loggedPlayer);

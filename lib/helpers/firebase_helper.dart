@@ -73,18 +73,17 @@ class FirebaseHelper {
     print(
         '[FirebaseHelper/updatePlayer] resolved to ${response.body.toString()}');
 
-    //todo remove team update
-    path = '/teams/${player.teamId}/players/${player.id}.json';
-    params = {
-      'auth': _authToken,
-    };
-    uri = Uri.https(authority, path, params);
-
-    print(
-        '[FirebaseHelper/updatePlayer] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
-    final teamResponse = await http.patch(uri, body: body);
-    print(
-        '[FirebaseHelper/updatePlayer] resolved to ${teamResponse.body.toString()}');
+    // path = '/teams/${player.teamId}/players/${player.id}.json';
+    // params = {
+    //   'auth': _authToken,
+    // };
+    // uri = Uri.https(authority, path, params);
+    //
+    // print(
+    //     '[FirebaseHelper/updatePlayer] PATCH to ${uri.toString().substring(0, 200)}, body = $body');
+    // final teamResponse = await http.patch(uri, body: body);
+    // print(
+    //     '[FirebaseHelper/updatePlayer] resolved to ${teamResponse.body.toString()}');
 
     return player;
   }
@@ -273,23 +272,22 @@ class FirebaseHelper {
       Team team, Player loggedPlayer) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
-    //todo remove team update
-    var path = '/teams/${team.id}/players.json';
-    var params = {
+    // var path = '/teams/${team.id}/players.json';
+    // var params = {
+    //   'auth': _authToken,
+    // };
+    // var uri = Uri.https(authority, path, params);
+    // print(
+    //     '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: ${team.id} ');
+    //
+    // await http.patch(uri,
+    //     body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
+    //
+    final path = '/players/${loggedPlayer.id}.json';
+    final params = {
       'auth': _authToken,
     };
-    var uri = Uri.https(authority, path, params);
-    print(
-        '[FirebaseHelper/addCurrentPlayerToTeam] player: ${loggedPlayer.id}, team: ${team.id} ');
-
-    await http.patch(uri,
-        body: json.encode({loggedPlayer.id: loggedPlayer.asMap}));
-
-    path = '/players/${loggedPlayer.id}.json';
-    params = {
-      'auth': _authToken,
-    };
-    uri = Uri.https(authority, path, params);
+    final uri = Uri.https(authority, path, params);
     await http.patch(uri,
         body: json.encode({
           'teamId': team.id,
@@ -506,6 +504,7 @@ class FirebaseHelper {
 
   static Future<List<Game>> fetchFutureGamesForTeam(String teamId) async {
     final _authToken = await _auth.currentUser.getIdToken();
+    print(_authToken);
     final dataString =
         DateTime.now().subtract(Duration(days: 7)).toIso8601String();
 
@@ -589,7 +588,8 @@ class FirebaseHelper {
         .toList();
   }
 
-  static editParticipation(GameParticipation participation) async {
+  static Future<GameParticipation> editParticipation(
+      GameParticipation participation) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
     final path = '/participations/${participation.id}.json';
@@ -606,7 +606,8 @@ class FirebaseHelper {
     return participation;
   }
 
-  static addNewParticipation(GameParticipation participation) async {
+  static Future<GameParticipation> addNewParticipation(
+      GameParticipation participation) async {
     final _authToken = await _auth.currentUser.getIdToken();
 
     var path = '/participations.json';

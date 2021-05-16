@@ -47,7 +47,7 @@ class FirebaseNotificationHelper {
     //   _messaging.subscribeToTopic(channel);
   }
 
-  static void logout(String channel) {
+  static Future<void> logout(String channel) async {
     // _messaging.unsubscribeFromTopic(channel);
   }
 
