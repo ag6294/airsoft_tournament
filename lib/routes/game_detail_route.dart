@@ -63,31 +63,36 @@ class _GameDetailRouteState extends State<GameDetailRoute> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<GameProvider>(
-      create: (context) => GameProvider(game)
-        ..fetchAndSetInvitations()
-        ..fetchAndSetGameParticipations(),
-      child: FutureBuilder(
-          future: Provider.of<GamesProvider>(context, listen: false)
-              .getGameById(gameId),
-          builder: (context, snapshot) {
-            game = snapshot.data;
-            return Scaffold(
-              // appBar: AppBar(),
-              body: snapshot.hasData
-                  ? CustomScrollView(
-                      slivers: [
-                        GameCover(snapshot.data, onModifyPop),
-                        GameParticipations(snapshot.data),
-                        GameDetails(snapshot.data),
-                        _BottomButtons(snapshot.data, loggedPlayer),
-                      ],
-                    )
-                  : Center(
-                      child: CircularProgressIndicator(),
-                    ),
-            );
-          }),
-    );
+        create: (context) => GameProvider(game),
+        builder: (context, _) {
+          return FutureBuilder(
+              future: Future.wait([
+                // Provider.of<GamesProvider>(context, listen: false)
+                //     .getGameById(gameId)
+                //     .then((value) => game = value),
+                Provider.of<GameProvider>(context, listen: false)
+                    .fetchAndSetGameParticipations(),
+                Provider.of<GameProvider>(context, listen: false)
+                    .fetchAndSetInvitations(),
+              ]),
+              builder: (context, snapshot) {
+                return Scaffold(
+                  // appBar: AppBar(),
+                  body: snapshot.connectionState == ConnectionState.done
+                      ? CustomScrollView(
+                          slivers: [
+                            GameCover(game, onModifyPop),
+                            GameParticipations(game),
+                            GameDetails(game),
+                            _BottomButtons(game, loggedPlayer),
+                          ],
+                        )
+                      : Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                );
+              });
+        });
   }
 }
 
